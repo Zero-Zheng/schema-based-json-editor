@@ -2,9 +2,9 @@ import { Component, Input, Output, EventEmitter } from "@angular/core";
 import * as common from "../common";
 
 @Component({
-    selector: "boolean-editor",
+    selector: "null-editor",
     template: `
-    <div [class]="theme.row">
+    <div>
         <title-editor></title-editor>
         <div *ngIf="!required" [class]="theme.optionalCheckbox">
             <label>
@@ -12,24 +12,15 @@ import * as common from "../common";
                 is undefined
             </label>
         </div>
-        <div *ngIf="value !== undefined" [class]="theme.optionalCheckbox">
-            <label>
-                <input type="checkbox"
-                    (change)="onChange"
-                    [checked]="value"
-                    [readOnly]="readonly || schema.readonly" />
-                {{title}}
-            </label>
-        </div>
         <p [class]="theme.help">{{schema.description}}</p>
     </div>
     `,
 })
-export class BooleanEditorComponent {
+export class NullEditorComponent {
     @Input()
-    schema: common.BooleanSchema;
+    schema: common.NullSchema;
     @Input()
-    initialValue: boolean;
+    initialValue: null;
     @Input()
     title?: string;
     @Output()
@@ -47,21 +38,17 @@ export class BooleanEditorComponent {
     @Input()
     required?: boolean;
 
-    value?: boolean;
+    value?: null;
     constructor() {
-        this.value = common.getDefaultValue(this.required, this.schema, this.initialValue) as boolean;
-        this.updateValue.emit(this.value);
-    }
-    onChange(e: { target: { checked: boolean } }) {
-        this.value = e.target.checked;
-        this.updateValue.emit(this.value);
+        this.value = common.getDefaultValue(this.required, this.schema, this.initialValue) as null;
+        // this.updateValue.emit(this.value);
     }
     toggleOptional() {
         if (this.value === undefined) {
-            this.value = common.getDefaultValue(true, this.schema, this.initialValue === undefined) as boolean;
+            this.value = common.getDefaultValue(true, this.schema, this.initialValue) as null;
         } else {
             this.value = undefined;
         }
-        this.updateValue.emit(this.value);
+        // this.updateValue.emit(this.value);
     }
 }

@@ -7,21 +7,16 @@ export class StringEditor extends React.Component<common.Props<common.StringSche
     errorMessage: string;
     constructor(props: common.Props<common.ArraySchema, string>) {
         super(props);
-        if (this.props.required) {
-            this.value = common.getDefaultValue(this.props.schema, this.props.initialValue) as string;
-        } else {
-            this.value = undefined;
-        }
+        this.value = common.getDefaultValue(this.props.required, this.props.schema, this.props.initialValue) as string;
         this.validate();
     }
     componentDidMount() {
-        if (this.value !== this.props.initialValue) {
-            this.props.updateValue(this.value);
-        }
+        this.props.updateValue(this.value);
     }
     onChange = (e: React.FormEvent<{ value: string }>) => {
-        this.value = e.target.value;
+        this.value = e.currentTarget.value;
         this.validate();
+        this.setState({ value: this.value });
         this.props.updateValue(this.value);
     }
     validate() {
@@ -47,7 +42,7 @@ export class StringEditor extends React.Component<common.Props<common.StringSche
     }
     toggleOptional = () => {
         if (this.value === undefined) {
-            this.value = common.getDefaultValue(this.props.schema, this.props.initialValue) as string;
+            this.value = common.getDefaultValue(true, this.props.schema, this.props.initialValue) as string;
             this.validate();
         } else {
             this.value = undefined;
@@ -59,18 +54,28 @@ export class StringEditor extends React.Component<common.Props<common.StringSche
         let control: JSX.Element | null = null;
         if (this.value !== undefined) {
             if (this.props.schema.enum === undefined || this.props.readonly || this.props.schema.readonly) {
-                control = (
-                    <input className={this.props.theme.formControl}
-                        type={this.props.schema.format}
-                        onChange={this.onChange}
-                        defaultValue={this.value}
-                        readOnly={this.props.readonly || this.props.schema.readonly} />
-                );
+                if (this.props.schema.format === "textarea") {
+                    control = (
+                        <textarea className={this.props.theme.formControl}
+                            onChange={this.onChange}
+                            defaultValue={this.value}
+                            rows={5}
+                            readOnly={this.props.readonly || this.props.schema.readonly} >
+                        </textarea>
+                    );
+                } else {
+                    control = (
+                        <input className={this.props.theme.formControl}
+                            type={this.props.schema.format}
+                            onChange={this.onChange}
+                            defaultValue={this.value}
+                            readOnly={this.props.readonly || this.props.schema.readonly} />
+                    );
+                }
             } else {
                 const options = this.props.schema.enum.map((e, i) => <option key={i} value={e} >{e}</option>);
                 control = (
                     <select className={this.props.theme.formControl}
-                        type={this.props.schema.format}
                         onChange={this.onChange}
                         defaultValue={this.value}>
                         {options}

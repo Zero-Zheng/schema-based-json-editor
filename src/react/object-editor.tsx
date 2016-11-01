@@ -7,16 +7,10 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
     value?: { [name: string]: common.ValueType };
     constructor(props: common.Props<common.ObjectSchema, { [name: string]: common.ValueType }>) {
         super(props);
-        if (this.props.required) {
-            this.value = common.getDefaultValue(this.props.schema, this.props.initialValue) as { [name: string]: common.ValueType };
-        } else {
-            this.value = undefined;
-        }
+        this.value = common.getDefaultValue(this.props.required, this.props.schema, this.props.initialValue) as { [name: string]: common.ValueType };
     }
     componentDidMount() {
-        if (this.value !== this.props.initialValue) {
-            this.props.updateValue(this.value);
-        }
+        this.props.updateValue(this.value);
     }
     collapseOrExpand = () => {
         this.collapsed = !this.collapsed;
@@ -24,7 +18,7 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
     }
     toggleOptional = () => {
         if (this.value === undefined) {
-            this.value = common.getDefaultValue(this.props.schema, this.props.initialValue) as { [name: string]: common.ValueType };
+            this.value = common.getDefaultValue(true, this.props.schema, this.props.initialValue) as { [name: string]: common.ValueType };
         } else {
             this.value = undefined;
         }
@@ -42,7 +36,8 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
                     this.props.updateValue(this.value);
                 };
                 const schema = this.props.schema.properties[property];
-                this.value[property] = common.getDefaultValue(schema, this.value[property]) as { [name: string]: common.ValueType };
+                const required = this.props.schema.required && this.props.schema.required.some(r => r === property);
+                this.value[property] = common.getDefaultValue(required, schema, this.value[property]) as { [name: string]: common.ValueType };
                 propertyElements.push(<Editor key={property}
                     schema={schema}
                     title={schema.title || property}
@@ -51,7 +46,7 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
                     theme={this.props.theme}
                     icon={this.props.icon}
                     locale={this.props.locale}
-                    required={this.props.schema.required && this.props.schema.required.some(r => r === property)}
+                    required={required}
                     readonly={this.props.readonly || this.props.schema.readonly} />);
             }
             childrenElement = (

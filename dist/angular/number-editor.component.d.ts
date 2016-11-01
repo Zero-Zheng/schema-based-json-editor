@@ -1,8 +1,8 @@
 import { EventEmitter } from "@angular/core";
 import * as common from "../common";
-export declare class BooleanEditorComponent {
-    schema: common.BooleanSchema;
-    initialValue: boolean;
+export declare class NumberEditorComponent {
+    schema: common.NumberSchema;
+    initialValue: number;
     title?: string;
     updateValue: EventEmitter<{}>;
     theme: common.Theme;
@@ -11,12 +11,15 @@ export declare class BooleanEditorComponent {
     onDelete?: () => void;
     readonly?: boolean;
     required?: boolean;
-    value?: boolean;
+    value?: number;
+    errorMessage: string;
     constructor();
     onChange(e: {
         target: {
-            checked: boolean;
+            value: string;
         };
     }): void;
+    trackByFunction(index: number, value: number): number;
+    validate(): void;
     toggleOptional(): void;
 }

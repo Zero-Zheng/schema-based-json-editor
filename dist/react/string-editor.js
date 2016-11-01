@@ -8,13 +8,14 @@ var StringEditor = (function (_super) {
         var _this = this;
         _super.call(this, props);
         this.onChange = function (e) {
-            _this.value = e.target.value;
+            _this.value = e.currentTarget.value;
             _this.validate();
+            _this.setState({ value: _this.value });
             _this.props.updateValue(_this.value);
         };
         this.toggleOptional = function () {
             if (_this.value === undefined) {
-                _this.value = common.getDefaultValue(_this.props.schema, _this.props.initialValue);
+                _this.value = common.getDefaultValue(true, _this.props.schema, _this.props.initialValue);
                 _this.validate();
             }
             else {
@@ -23,18 +24,11 @@ var StringEditor = (function (_super) {
             _this.setState({ value: _this.value });
             _this.props.updateValue(_this.value);
         };
-        if (this.props.required) {
-            this.value = common.getDefaultValue(this.props.schema, this.props.initialValue);
-        }
-        else {
-            this.value = undefined;
-        }
+        this.value = common.getDefaultValue(this.props.required, this.props.schema, this.props.initialValue);
         this.validate();
     }
     StringEditor.prototype.componentDidMount = function () {
-        if (this.value !== this.props.initialValue) {
-            this.props.updateValue(this.value);
-        }
+        this.props.updateValue(this.value);
     };
     StringEditor.prototype.validate = function () {
         if (this.value !== undefined) {
@@ -60,11 +54,16 @@ var StringEditor = (function (_super) {
         var control = null;
         if (this.value !== undefined) {
             if (this.props.schema.enum === undefined || this.props.readonly || this.props.schema.readonly) {
-                control = (React.createElement("input", {className: this.props.theme.formControl, type: this.props.schema.format, onChange: this.onChange, defaultValue: this.value, readOnly: this.props.readonly || this.props.schema.readonly}));
+                if (this.props.schema.format === "textarea") {
+                    control = (React.createElement("textarea", {className: this.props.theme.formControl, onChange: this.onChange, defaultValue: this.value, rows: 5, readOnly: this.props.readonly || this.props.schema.readonly}));
+                }
+                else {
+                    control = (React.createElement("input", {className: this.props.theme.formControl, type: this.props.schema.format, onChange: this.onChange, defaultValue: this.value, readOnly: this.props.readonly || this.props.schema.readonly}));
+                }
             }
             else {
                 var options = this.props.schema.enum.map(function (e, i) { return React.createElement("option", {key: i, value: e}, e); });
-                control = (React.createElement("select", {className: this.props.theme.formControl, type: this.props.schema.format, onChange: this.onChange, defaultValue: this.value}, options));
+                control = (React.createElement("select", {className: this.props.theme.formControl, onChange: this.onChange, defaultValue: this.value}, options));
             }
         }
         var errorDescription = null;
