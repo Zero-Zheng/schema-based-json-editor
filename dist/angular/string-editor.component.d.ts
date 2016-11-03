@@ -8,12 +8,16 @@ export declare class StringEditorComponent {
     theme: common.Theme;
     icon: common.Icon;
     locale: common.Locale;
-    onDelete?: () => void;
+    onDelete: EventEmitter<{}>;
     readonly?: boolean;
     required?: boolean;
+    hasDeleteButton: boolean;
     value?: string;
     errorMessage: string;
     ngOnInit(): void;
+    useTextArea(): boolean | undefined;
+    useInput(): boolean | undefined;
+    useSelect(): boolean;
     onChange(e: {
         target: {
             value: string;

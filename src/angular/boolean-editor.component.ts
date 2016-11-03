@@ -5,7 +5,13 @@ import * as common from "../common";
     selector: "boolean-editor",
     template: `
     <div [class]="theme.row">
-        <title-editor></title-editor>
+        <title-editor [title]="title"
+            (onDelete)="onDelete"
+            [theme]="theme"
+            [icon]="icon"
+            [locale]="locale"
+            [hasDeleteButton]="hasDeleteButton">
+        </title-editor>
         <div *ngIf="!required" [class]="theme.optionalCheckbox">
             <label>
                 <input type="checkbox" (change)="toggleOptional" [checked]="value === undefined" />
@@ -41,11 +47,13 @@ export class BooleanEditorComponent {
     @Input()
     locale: common.Locale;
     @Output()
-    onDelete?: () => void;
+    onDelete = new EventEmitter();
     @Input()
     readonly?: boolean;
     @Input()
     required?: boolean;
+    @Input()
+    hasDeleteButton: boolean;
 
     value?: boolean;
     ngOnInit() {

@@ -4,8 +4,14 @@ import * as common from "../common";
 @Component({
     selector: "null-editor",
     template: `
-    <div>
-        <title-editor></title-editor>
+    <div [class]="theme.row">
+        <title-editor [title]="title"
+            (onDelete)="onDelete"
+            [theme]="theme"
+            [icon]="icon"
+            [locale]="locale"
+            [hasDeleteButton]="hasDeleteButton">
+        </title-editor>
         <div *ngIf="!required" [class]="theme.optionalCheckbox">
             <label>
                 <input type="checkbox" (change)="toggleOptional" [checked]="value === undefined" />
@@ -32,11 +38,13 @@ export class NullEditorComponent {
     @Input()
     locale: common.Locale;
     @Output()
-    onDelete?: () => void;
+    onDelete = new EventEmitter();
     @Input()
     readonly?: boolean;
     @Input()
     required?: boolean;
+    @Input()
+    hasDeleteButton: boolean;
 
     value?: null;
     ngOnInit() {

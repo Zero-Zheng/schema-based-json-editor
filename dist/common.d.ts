@@ -1,7 +1,7 @@
-/// <reference types="react" />
 import "tslib";
 export declare const toNumber: (value?: any) => number;
 export declare const toInteger: (value?: any) => number;
+export declare const debounce: (func: (...args: any[]) => any, wait: number) => (...args: any[]) => any;
 import * as dragula from "dragula";
 export { dragula };
 export declare type CommonSchema = {
@@ -87,14 +87,13 @@ export declare const locales: {
 };
 export declare function getLocale(name: string | undefined | Locale): Locale;
 export declare type Icon = {
-    collapse: string | JSX.Element;
-    expand: string | JSX.Element;
-    add: string | JSX.Element;
-    delete: string | JSX.Element;
+    isText: boolean;
+    collapse: string;
+    expand: string;
+    add: string;
+    delete: string;
 };
-export declare function getIcon(name: string | undefined | Icon, locale: Locale, icons: {
-    [name: string]: Icon;
-}): Icon;
+export declare function getIcon(name: string | undefined | Icon, locale: Locale): Icon;
 export declare type ValueType = {
     [name: string]: any;
 } | any[] | number | boolean | string | null;

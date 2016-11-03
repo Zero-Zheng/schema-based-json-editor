@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as common from "../common";
 import { Editor } from "./editor";
+import { Icon } from "./icon";
 
 export class ObjectEditor extends React.Component<common.Props<common.ObjectSchema, { [name: string]: common.ValueType }>, { collapsed?: boolean; value?: { [name: string]: common.ValueType } }> {
     collapsed = false;
@@ -38,8 +39,6 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
             const propertyElements: JSX.Element[] = [];
             for (const property in this.props.schema.properties) {
                 const onChange = (value: common.ValueType) => {
-                    console.log(value);
-                    console.log(this.value);
                     this.value![property] = value;
                     this.setState({ value: this.value });
                     this.props.updateValue(this.value);
@@ -65,7 +64,11 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
         }
         let deleteButton: JSX.Element | null = null;
         if (this.props.onDelete && !this.props.readonly && !this.props.schema.readonly) {
-            deleteButton = <button className={this.props.theme.button} onClick={this.props.onDelete}>{this.props.icon.delete}</button>;
+            deleteButton = (
+                <button className={this.props.theme.button} onClick={this.props.onDelete}>
+                    <Icon icon={this.props.icon} text={this.props.icon.delete}></Icon>
+                </button>
+            );
         }
         let optionalCheckbox: JSX.Element | null = null;
         if (!this.props.required) {
@@ -79,11 +82,13 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
             );
         }
         return (
-            <div>
+            <div className={this.props.theme.row}>
                 <h3>
                     {this.props.title || this.props.schema.title}
                     <div className={this.props.theme.buttonGroup} style={common.buttonGroupStyle}>
-                        <button className={this.props.theme.button} onClick={this.collapseOrExpand}>{this.collapsed ? this.props.icon.expand : this.props.icon.collapse}</button>
+                        <button className={this.props.theme.button} onClick={this.collapseOrExpand}>
+                            <Icon icon={this.props.icon} text={this.collapsed ? this.props.icon.expand : this.props.icon.collapse}></Icon>
+                        </button>
                         {deleteButton}
                     </div>
                 </h3>

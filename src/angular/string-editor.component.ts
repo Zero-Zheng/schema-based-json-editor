@@ -5,29 +5,33 @@ import * as common from "../common";
     selector: "string-editor",
     template: `
     <div [class]="errorMessage ? theme.errorRow : theme.row">
-        <title-editor></title-editor>
+        <title-editor [title]="title"
+            (onDelete)="onDelete"
+            [theme]="theme"
+            [icon]="icon"
+            [locale]="locale"
+            [hasDeleteButton]="hasDeleteButton">
+        </title-editor>
         <div *ngIf="!required" [class]="theme.optionalCheckbox">
             <label>
                 <input type="checkbox" (onChange)="toggleOptional" [checked]="value === undefined" />
                 is undefined
             </label>
         </div>
-        <textarea *ngIf="value !== undefined && (schema.enum === undefined || readonly || schema.readonly) && schema.format === 'textarea'"
+        <textarea *ngIf="useTextArea()"
             [class]="theme.formControl"
-            (change)="onChange"
+            (keyup)="onChange($event)"
             rows="5"
-            [readOnly]="readonly || schema.readonly">
-            {{value}}
-        </textarea>
-        <input *ngIf="value !== undefined && (schema.enum === undefined || readonly || schema.readonly) && schema.format !== 'textarea'"
+            [readOnly]="readonly || schema.readonly">{{value}}</textarea>
+        <input *ngIf="useInput()"
             [class]="theme.formControl"
             [type]="schema.format"
-            (change)="onChange"
+            (keyup)="onChange($event)"
             [defaultValue]="value"
             [readOnly]="readonly || schema.readonly" />
-        <select *ngIf="value !== undefined && (schema.enum !== undefined && readonly && schema.readonly)"
+        <select *ngIf="useSelect()"
             [class]="theme.formControl"
-            (change)="onChange">
+            (change)="onChange($event)">
             <option *ngFor="let e of schema.enum; let i = index; trackBy:trackByFunction"
                 [value]="e"
                 [selected]="value === e">
@@ -55,11 +59,13 @@ export class StringEditorComponent {
     @Input()
     locale: common.Locale;
     @Output()
-    onDelete?: () => void;
+    onDelete = new EventEmitter();
     @Input()
     readonly?: boolean;
     @Input()
     required?: boolean;
+    @Input()
+    hasDeleteButton: boolean;
 
     value?: string;
     errorMessage: string;
@@ -67,6 +73,15 @@ export class StringEditorComponent {
         this.value = common.getDefaultValue(this.required, this.schema, this.initialValue) as string;
         this.validate();
         this.updateValue.emit(this.value);
+    }
+    useTextArea() {
+        return this.value !== undefined && (this.schema.enum === undefined || this.readonly || this.schema.readonly) && this.schema.format === "textarea";
+    }
+    useInput() {
+        return this.value !== undefined && (this.schema.enum === undefined || this.readonly || this.schema.readonly) && this.schema.format !== "textarea";
+    }
+    useSelect() {
+        return this.value !== undefined && (this.schema.enum !== undefined && !this.readonly && !this.schema.readonly);
     }
     onChange(e: { target: { value: string } }) {
         this.value = e.target.value;
@@ -86,7 +101,7 @@ export class StringEditorComponent {
                 return;
             }
             if (this.schema.pattern !== undefined
-                && !this.value.match(this.schema.pattern)) {
+                && !new RegExp(this.schema.pattern).test(this.value)) {
                 this.errorMessage = this.locale.error.pattern.replace("{0}", String(this.schema.pattern));
                 return;
             }

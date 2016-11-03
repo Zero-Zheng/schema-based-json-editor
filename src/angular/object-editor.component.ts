@@ -4,12 +4,14 @@ import * as common from "../common";
 @Component({
     selector: "object-editor",
     template: `
-    <div>
+    <div [class]="theme.row">
         <h3>
             {{title || schema.title}}
             <div [class]="theme.buttonGroup" [style]="buttonGroupStyle">
-                <button [class]="theme.button" (click)="collapseOrExpand">{{collapsed ? icon.expand : icon.collapsed}}</button>
-                <button *ngIf="onDelete && !readonly && !schema.readonly" [class]="theme.button" (click)="onDelete">{{icon.delete}}</button>
+                <button [class]="theme.button" (click)="collapseOrExpand">
+                    <icon [icon]="icon" [text]="collapsed ? icon.expand : icon.collapse"></icon>
+                </button>
+                <button *ngIf="hasDeleteButton()" [class]="theme.button" (click)="onDelete()">{{icon.delete}}</button>
             </div>
         </h3>
         <p [class]="theme.help">{{schema.description}}</p>
@@ -24,11 +26,11 @@ import * as common from "../common";
                 [schema]="property.value"
                 [title]="property.value.title || property.name"
                 [initialValue]="value[property.name]"
-                (updateValue)="onChange"
+                (updateValue)="onChange(property.name, $event)"
                 [theme]="theme"
                 [icon]="icon"
                 [locale]="locale"
-                [required]="required"
+                [required]="isRequired(property.name)"
                 [readonly]="readonly || schema.readonly">
             </editor>
         </div>
@@ -77,6 +79,9 @@ export class ObjectEditorComponent {
         }
         this.updateValue.emit(this.value);
     }
+    isRequired(property: string) {
+        return this.schema.required && this.schema.required.some(r => r === property);
+    }
     trackByFunction(index: number, value: { [name: string]: common.ValueType }) {
         return index;
     }
@@ -90,5 +95,12 @@ export class ObjectEditorComponent {
             this.value = undefined;
         }
         this.updateValue.emit(this.value);
+    }
+    onChange(property: string, value: common.ValueType) {
+        this.value![property] = value;
+        this.updateValue.emit(this.value);
+    }
+    hasDeleteButton() {
+        return this.onDelete && !this.readonly && !this.schema.readonly;
     }
 }

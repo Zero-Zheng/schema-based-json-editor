@@ -1,6 +1,5 @@
 import { Component, Input, Output, EventEmitter } from "@angular/core";
 import * as common from "../common";
-// import { Editor } from "./editor";
 
 @Component({
     selector: "array-editor",
@@ -8,10 +7,16 @@ import * as common from "../common";
     <div class="{{errorMessage ? theme.errorRow : theme.row}}">
         <h3>
             {{title || schema.title}}
-            <div [class]="theme.buttonGroup" [style]="common.buttonGroupStyleString">
-                <button [class]="theme.button" (click)="collapseOrExpand">{{collapsed ? icon.expand : icon.collapse}}</button>
-                <button *ngIf="!readonly && value !== undefined" [class]="theme.button" (click)="addItem">{{icon.add}}</button>
-                <button *ngIf="onDelete && !treadonly && !schema.readonly" [class]="theme.button" (click)="onDelete">{{icon.delete}}</button>
+            <div [class]="theme.buttonGroup" [style]="buttonGroupStyleString">
+                <button [class]="theme.button" (click)="collapseOrExpand">
+                    <icon [icon]="icon" [text]="collapsed ? icon.expand : icon.collapse"></icon>
+                </button>
+                <button *ngIf="!readonly && value !== undefined" [class]="theme.button" (click)="addItem">
+                    <icon [icon]="icon" [text]="icon.add"></icon>
+                </button>
+                <button *ngIf="onDelete && !treadonly && !schema.readonly" [class]="theme.button" (click)="onDelete">
+                    <icon [icon]="icon" [text]="icon.delete"></icon>
+                </button>
             </div>
         </h3>
         <p [class]="theme.help">{{schema.description}}</p>
@@ -66,6 +71,7 @@ export class ArrayEditorComponent {
     value?: common.ValueType[];
     drak: common.dragula.Drake;
     errorMessage: string;
+    buttonGroupStyleString = common.buttonGroupStyleString;
     ngOnInit() {
         this.value = common.getDefaultValue(this.required, this.schema, this.initialValue) as common.ValueType[];
 

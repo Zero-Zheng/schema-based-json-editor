@@ -8,12 +8,15 @@ export declare class NumberEditorComponent {
     theme: common.Theme;
     icon: common.Icon;
     locale: common.Locale;
-    onDelete?: () => void;
+    onDelete: EventEmitter<{}>;
     readonly?: boolean;
     required?: boolean;
+    hasDeleteButton: boolean;
     value?: number;
     errorMessage: string;
     ngOnInit(): void;
+    useInput(): boolean | undefined;
+    useSelect(): boolean;
     onChange(e: {
         target: {
             value: string;
