@@ -62,6 +62,26 @@ the online demo: https://plantain-00.github.io/schema-based-json-editor/demo/ang
 
 the source code of the demo: https://github.com/plantain-00/schema-based-json-editor/tree/master/demo/angular
 
+#### vuejs component demo
+
+```js
+import "schema-based-json-editor/dist/vue/index";
+```
+
+```jsx
+<json-editor :schema="schema"
+    :initial-value="value"
+    @update-value="updateValue(arguments[0])"
+    theme="bootstrap3"
+    icon="fontawesome4"
+    locale="zh-cn">
+</json-editor>
+```
+
+the online demo: https://plantain-00.github.io/schema-based-json-editor/demo/vue/index.html
+
+the source code of the demo: https://github.com/plantain-00/schema-based-json-editor/tree/master/demo/vue
+
 #### properties of the component
 
 + schema: the json schema object
@@ -82,7 +102,3 @@ the source code of the demo: https://github.com/plantain-00/schema-based-json-ed
 + array schema fields: items, minItems, uniqueItems
 + number and integer shema fields: minimum, exclusiveMinimum, maximum, exclusiveMaximum, enum
 + string schema fields: format, enum, minLength, maxLength, pattern
-
-#### todo list
-
-+ vuejs component
