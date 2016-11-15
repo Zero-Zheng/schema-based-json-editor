@@ -25,7 +25,7 @@ import { JSONEditor } from "schema-based-json-editor/dist/react/index";
 ```jsx
 <JSONEditor schema={schema}
     initialValue={initialValue}
-    updateValue={value => this.value = value}
+    updateValue={(value, isValid) => this.updateValue(value, isValid)}
     theme="bootstrap3"
     icon="fontawesome4"
     locale="zh-cn" />
@@ -102,3 +102,7 @@ the source code of the demo: https://github.com/plantain-00/schema-based-json-ed
 + array schema fields: items, minItems, uniqueItems
 + number and integer shema fields: minimum, exclusiveMinimum, maximum, exclusiveMaximum, enum
 + string schema fields: format, enum, minLength, maxLength, pattern
+
+#### change logs
+
+https://github.com/plantain-00/schema-based-json-editor/tree/master/change_logs.md

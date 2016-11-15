@@ -11,7 +11,7 @@ export class StringEditor extends React.Component<common.Props<common.StringSche
         this.validate();
     }
     componentDidMount() {
-        this.props.updateValue(this.value);
+        this.props.updateValue(this.value, !this.errorMessage);
     }
     render() {
         let control: JSX.Element | null = null;
@@ -76,37 +76,15 @@ export class StringEditor extends React.Component<common.Props<common.StringSche
         this.value = e.currentTarget.value;
         this.validate();
         this.setState({ value: this.value });
-        this.props.updateValue(this.value);
+        this.props.updateValue(this.value, !this.errorMessage);
     }
     private validate() {
-        if (this.value !== undefined) {
-            if (this.props.schema.minLength !== undefined
-                && this.value.length < this.props.schema.minLength) {
-                this.errorMessage = this.props.locale.error.minLength.replace("{0}", String(this.props.schema.minLength));
-                return;
-            }
-            if (this.props.schema.maxLength !== undefined
-                && this.value.length > this.props.schema.maxLength) {
-                this.errorMessage = this.props.locale.error.maxLength.replace("{0}", String(this.props.schema.maxLength));
-                return;
-            }
-            if (this.props.schema.pattern !== undefined
-                && !new RegExp(this.props.schema.pattern).test(this.value)) {
-                this.errorMessage = this.props.locale.error.pattern.replace("{0}", String(this.props.schema.pattern));
-                return;
-            }
-        }
-
-        this.errorMessage = "";
+        this.errorMessage = common.getErrorMessageOfString(this.value, this.props.schema, this.props.locale);
     }
     private toggleOptional = () => {
-        if (this.value === undefined) {
-            this.value = common.getDefaultValue(true, this.props.schema, this.props.initialValue) as string;
-            this.validate();
-        } else {
-            this.value = undefined;
-        }
+        this.value = common.toggleOptional(this.value, this.props.schema, this.props.initialValue) as string | undefined;
+        this.validate();
         this.setState({ value: this.value });
-        this.props.updateValue(this.value);
+        this.props.updateValue(this.value, !this.errorMessage);
     }
 }

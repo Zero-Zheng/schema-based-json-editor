@@ -1,3 +1,4 @@
+import * as common from "../common";
 export declare const booleanEditor: {
     template: string;
     props: string[];
@@ -14,9 +15,9 @@ export declare const booleanEditor: {
     };
 };
 export declare type This = {
-    $emit: (event: string, ...args: any[]) => void;
+    $emit: (event: string, args: common.ValidityValue<boolean | undefined>) => void;
     required: boolean;
-    schema: any;
+    schema: common.BooleanSchema;
     initialValue: boolean;
     value?: boolean;
 };

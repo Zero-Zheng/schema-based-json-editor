@@ -1,4 +1,6 @@
-export const schema: any = {
+import * as common from "../dist/common";
+
+export const schema: common.Schema = {
     type: "object",
     title: "A Title example",
     description: "a description example",
@@ -9,7 +11,7 @@ export const schema: any = {
             description: "a string description example",
             default: "a default string example",
             minLength: 20,
-            maxLength: 30,
+            maxLength: 25,
         },
         booleanExample: {
             type: "boolean",
@@ -60,6 +62,7 @@ export const schema: any = {
             description: "a array description example",
             items: {
                 type: "string",
+                maxLength: 15,
             },
             default: ["default item 1", "default item 2"],
             minItems: 1,

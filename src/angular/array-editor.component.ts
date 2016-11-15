@@ -54,7 +54,7 @@ export class ArrayEditorComponent {
     @Input()
     title?: string;
     @Output()
-    updateValue = new EventEmitter();
+    updateValue = new EventEmitter<common.ValidityValue<common.ValueType[] | undefined>>();
     @Input()
     theme: common.Theme;
     @Input()
@@ -79,6 +79,7 @@ export class ArrayEditorComponent {
     drak: common.dragula.Drake;
     errorMessage: string;
     buttonGroupStyleString = common.buttonGroupStyleString;
+    invalidIndexes: number[] = [];
     getValue() {
         if (this.value !== undefined && !this.collapsed) {
             return this.value;
@@ -88,7 +89,7 @@ export class ArrayEditorComponent {
     }
     ngOnInit() {
         this.value = common.getDefaultValue(this.required, this.schema, this.initialValue) as common.ValueType[];
-        this.updateValue.emit(this.value);
+        this.updateValue.emit({ value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
     }
     ngAfterViewInit() {
         if (this.drakContainer) {
@@ -96,21 +97,9 @@ export class ArrayEditorComponent {
             this.drak = common.dragula([container]);
             this.drak.on("drop", (el: HTMLElement, target: HTMLElement, source: HTMLElement, sibling: HTMLElement | null) => {
                 if (this.value) {
-                    const fromIndex = +el.dataset["index"];
-                    if (sibling) {
-                        const toIndex = +sibling.dataset["index"];
-                        this.value.splice(toIndex, 0, this.value[fromIndex]);
-                        if (fromIndex > toIndex) {
-                            this.value.splice(fromIndex + 1, 1);
-                        } else {
-                            this.value.splice(fromIndex, 1);
-                        }
-                    } else {
-                        this.value.push(this.value[fromIndex]);
-                        this.value.splice(fromIndex, 1);
-                    }
+                    common.switchItem(this.value, el, sibling);
                     this.renderSwitch = -this.renderSwitch;
-                    this.updateValue.emit(this.value);
+                    this.updateValue.emit({ value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
                 }
             });
         }
@@ -127,38 +116,16 @@ export class ArrayEditorComponent {
         this.collapsed = !this.collapsed;
     }
     toggleOptional = () => {
-        if (this.value === undefined) {
-            this.value = common.getDefaultValue(true, this.schema, this.initialValue) as common.ValueType[];
-        } else {
-            this.value = undefined;
-        }
-        this.updateValue.emit(this.value);
+        this.value = common.toggleOptional(this.value, this.schema, this.initialValue) as common.ValueType[] | undefined;
+        this.validate();
+        this.updateValue.emit({ value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
     }
     validate() {
-        if (this.value !== undefined) {
-            if (this.schema.minItems !== undefined) {
-                if (this.value.length < this.schema.minItems) {
-                    this.errorMessage = this.locale.error.minItems.replace("{0}", String(this.schema.minItems));
-                    return;
-                }
-            }
-            if (this.schema.uniqueItems) {
-                for (let i = 1; i < this.value.length; i++) {
-                    for (let j = 0; j < i; j++) {
-                        if (common.isSame(this.value[i], this.value[j])) {
-                            this.errorMessage = this.locale.error.uniqueItems.replace("{0}", String(j)).replace("{1}", String(i));
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-
-        this.errorMessage = "";
+        this.errorMessage = common.getErrorMessageOfArray(this.value, this.schema, this.locale);
     }
     addItem() {
         this.value!.push(common.getDefaultValue(true, this.schema.items, undefined) !);
-        this.updateValue.emit(this.value);
+        this.updateValue.emit({ value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
     }
     hasDeleteButtonFunction() {
         return this.hasDeleteButton && !this.readonly && !this.schema.readonly;
@@ -166,12 +133,13 @@ export class ArrayEditorComponent {
     onDeleteFunction(i: number) {
         this.value!.splice(i, 1);
         this.renderSwitch = -this.renderSwitch;
-        this.updateValue.emit(this.value);
         this.validate();
+        this.updateValue.emit({ value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
     }
-    onChange(i: number, value: common.ValueType) {
+    onChange(i: number, {value, isValid}: common.ValidityValue<common.ValueType>) {
         this.value![i] = value;
-        this.updateValue.emit(this.value);
         this.validate();
+        common.recordInvalidIndexesOfArray(this.invalidIndexes, isValid, i);
+        this.updateValue.emit({ value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
     }
 }

@@ -6,6 +6,7 @@ import { Icon } from "./icon";
 export class ObjectEditor extends React.Component<common.Props<common.ObjectSchema, { [name: string]: common.ValueType }>, { collapsed?: boolean; value?: { [name: string]: common.ValueType } }> {
     private collapsed = false;
     private value?: { [name: string]: common.ValueType };
+    private invalidProperties: string[] = [];
     constructor(props: common.Props<common.ObjectSchema, { [name: string]: common.ValueType }>) {
         super(props);
         this.value = common.getDefaultValue(this.props.required, this.props.schema, this.props.initialValue) as { [name: string]: common.ValueType };
@@ -18,17 +19,18 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
         }
     }
     componentDidMount() {
-        this.props.updateValue(this.value);
+        this.props.updateValue(this.value, this.invalidProperties.length === 0);
     }
     render() {
         let childrenElement: JSX.Element | null = null;
         if (!this.collapsed && this.value !== undefined) {
             const propertyElements: JSX.Element[] = [];
             for (const property in this.props.schema.properties) {
-                const onChange = (value: common.ValueType) => {
+                const onChange = (value: common.ValueType, isValid: boolean) => {
                     this.value![property] = value;
                     this.setState({ value: this.value });
-                    this.props.updateValue(this.value);
+                    common.recordInvalidPropertiesOfObject(this.invalidProperties, isValid, property);
+                    this.props.updateValue(this.value, this.invalidProperties.length === 0);
                 };
                 const schema = this.props.schema.properties[property];
                 const required = this.props.schema.required && this.props.schema.required.some(r => r === property);
@@ -90,12 +92,8 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
         this.setState({ collapsed: this.collapsed });
     }
     private toggleOptional = () => {
-        if (this.value === undefined) {
-            this.value = common.getDefaultValue(true, this.props.schema, this.props.initialValue) as { [name: string]: common.ValueType };
-        } else {
-            this.value = undefined;
-        }
+        this.value = common.toggleOptional(this.value, this.props.schema, this.props.initialValue) as { [name: string]: common.ValueType } | undefined;
         this.setState({ value: this.value });
-        this.props.updateValue(this.value);
+        this.props.updateValue(this.value, this.invalidProperties.length === 0);
     }
 }

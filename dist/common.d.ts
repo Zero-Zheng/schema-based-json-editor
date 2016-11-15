@@ -1,7 +1,8 @@
 import "tslib";
-export declare const toNumber: (value?: any) => number;
-export declare const toInteger: (value?: any) => number;
-export declare const debounce: (func: (...args: any[]) => any, wait: number) => (...args: any[]) => any;
+import * as toNumber from "lodash/toNumber";
+import * as toInteger from "lodash/toInteger";
+import * as debounce from "lodash/debounce";
+export { toNumber, toInteger, debounce };
 import * as dragula from "dragula";
 export { dragula };
 export declare type CommonSchema = {
@@ -106,7 +107,7 @@ export interface Props<TSchema extends CommonSchema, TValue> {
     schema: TSchema;
     initialValue: TValue;
     title?: string;
-    updateValue: (value?: TValue) => void;
+    updateValue: (value: TValue | undefined, isValid: boolean) => void;
     theme: Theme;
     icon: Icon;
     locale: Locale;
@@ -114,4 +115,16 @@ export interface Props<TSchema extends CommonSchema, TValue> {
     readonly?: boolean;
     required?: boolean;
 }
-export declare function isSame(value1: ValueType, value2: ValueType): boolean;
+export declare function switchItem(value: any[], el: HTMLElement, sibling: HTMLElement | null): void;
+export declare function getErrorMessageOfArray(value: any[] | undefined, schema: ArraySchema, locale: Locale): string;
+export declare function getErrorMessageOfNumber(value: number | undefined, schema: NumberSchema, locale: Locale): string;
+export declare function getErrorMessageOfString(value: string | undefined, schema: StringSchema, locale: Locale): string;
+export declare function toggleOptional(value: ValueType | undefined, schema: Schema, initialValue: any): string | number | boolean | any[] | {
+    [name: string]: any;
+} | null | undefined;
+export declare type ValidityValue<T> = {
+    value: T;
+    isValid: boolean;
+};
+export declare function recordInvalidPropertiesOfObject(invalidProperties: string[], isValid: boolean, property: string): void;
+export declare function recordInvalidIndexesOfArray(invalidIndexes: number[], isValid: boolean, i: number): void;

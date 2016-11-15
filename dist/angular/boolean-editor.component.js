@@ -8,20 +8,15 @@ var BooleanEditorComponent = (function () {
     }
     BooleanEditorComponent.prototype.ngOnInit = function () {
         this.value = common.getDefaultValue(this.required, this.schema, this.initialValue);
-        this.updateValue.emit(this.value);
+        this.updateValue.emit({ value: this.value, isValid: true });
     };
     BooleanEditorComponent.prototype.onChange = function (e) {
         this.value = e.target.checked;
-        this.updateValue.emit(this.value);
+        this.updateValue.emit({ value: this.value, isValid: true });
     };
     BooleanEditorComponent.prototype.toggleOptional = function () {
-        if (this.value === undefined) {
-            this.value = common.getDefaultValue(true, this.schema, this.initialValue === undefined);
-        }
-        else {
-            this.value = undefined;
-        }
-        this.updateValue.emit(this.value);
+        this.value = common.toggleOptional(this.value, this.schema, this.initialValue);
+        this.updateValue.emit({ value: this.value, isValid: true });
     };
     __decorate([
         core_1.Input()

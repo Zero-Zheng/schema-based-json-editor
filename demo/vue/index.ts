@@ -2,15 +2,17 @@ import * as Vue from "vue";
 import { schema } from "../schema";
 
 import "../../dist/vue/index";
+import * as common from "../../dist/common";
 
 /* tslint:disable:only-arrow-functions */
 /* tslint:disable:no-unused-new */
 /* tslint:disable:object-literal-shorthand */
 
 type This = {
-    schema: any;
+    schema: common.Schema;
     value: any;
-    valueString: any;
+    color: string;
+    valueString: string;
 }
 
 new Vue({
@@ -20,13 +22,15 @@ new Vue({
         return {
             schema,
             value,
+            color: "black",
             valueString: JSON.stringify(value, null, "  "),
             schemaString: JSON.stringify(schema, null, "  "),
         };
     },
     methods: {
-        updateValue(this: This, value: any) {
-            this.valueString = JSON.stringify(this.value, null, "  ");
+        updateValue(this: This, {value, isValid}: common.ValidityValue<common.ValueType>) {
+            this.valueString = JSON.stringify(value, null, "  ");
+            this.color = isValid ? "black" : "red";
         },
     },
 });

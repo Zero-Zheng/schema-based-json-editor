@@ -53,7 +53,7 @@ export class StringEditorComponent {
     @Input()
     title?: string;
     @Output()
-    updateValue = new EventEmitter();
+    updateValue = new EventEmitter<common.ValidityValue<string | undefined>>();
     @Input()
     theme: common.Theme;
     @Input()
@@ -74,7 +74,7 @@ export class StringEditorComponent {
     ngOnInit() {
         this.value = common.getDefaultValue(this.required, this.schema, this.initialValue) as string;
         this.validate();
-        this.updateValue.emit(this.value);
+        this.updateValue.emit({ value: this.value, isValid: !this.errorMessage });
     }
     useTextArea() {
         return this.value !== undefined && (this.schema.enum === undefined || this.readonly || this.schema.readonly) && this.schema.format === "textarea";
@@ -88,37 +88,15 @@ export class StringEditorComponent {
     onChange(e: { target: { value: string } }) {
         this.value = e.target.value;
         this.validate();
-        this.updateValue.emit(this.value);
+        this.updateValue.emit({ value: this.value, isValid: !this.errorMessage });
     }
     validate() {
-        if (this.value !== undefined) {
-            if (this.schema.minLength !== undefined
-                && this.value.length < this.schema.minLength) {
-                this.errorMessage = this.locale.error.minLength.replace("{0}", String(this.schema.minLength));
-                return;
-            }
-            if (this.schema.maxLength !== undefined
-                && this.value.length > this.schema.maxLength) {
-                this.errorMessage = this.locale.error.maxLength.replace("{0}", String(this.schema.maxLength));
-                return;
-            }
-            if (this.schema.pattern !== undefined
-                && !new RegExp(this.schema.pattern).test(this.value)) {
-                this.errorMessage = this.locale.error.pattern.replace("{0}", String(this.schema.pattern));
-                return;
-            }
-        }
-
-        this.errorMessage = "";
+        this.errorMessage = common.getErrorMessageOfString(this.value, this.schema, this.locale);
     }
     toggleOptional = () => {
-        if (this.value === undefined) {
-            this.value = common.getDefaultValue(true, this.schema, this.initialValue) as string;
-            this.validate();
-        } else {
-            this.value = undefined;
-        }
-        this.updateValue.emit(this.value);
+        this.value = common.toggleOptional(this.value, this.schema, this.initialValue) as string | undefined;
+        this.validate();
+        this.updateValue.emit({ value: this.value, isValid: !this.errorMessage });
     }
     trackByFunction(index: number, value: { [name: string]: common.ValueType }) {
         return index;

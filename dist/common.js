@@ -1,8 +1,12 @@
 "use strict";
 require("tslib");
-exports.toNumber = require("lodash.tonumber");
-exports.toInteger = require("lodash.tointeger");
-exports.debounce = require("lodash.debounce");
+var toNumber = require("lodash/toNumber");
+exports.toNumber = toNumber;
+var toInteger = require("lodash/toInteger");
+exports.toInteger = toInteger;
+var debounce = require("lodash/debounce");
+exports.debounce = debounce;
+var isObject = require("lodash/isObject");
 var dragula = require("dragula");
 exports.dragula = dragula;
 exports.themes = {
@@ -128,14 +132,78 @@ function getIcon(name, locale) {
 }
 exports.getIcon = getIcon;
 function getDefaultValue(required, schema, initialValue) {
+    if (initialValue !== undefined) {
+        switch (schema.type) {
+            case "object":
+                if (isObject(initialValue)) {
+                    return initialValue;
+                }
+                break;
+            case "array":
+                if (Array.isArray(initialValue)) {
+                    return initialValue;
+                }
+                break;
+            case "number":
+            case "integer":
+                if (typeof initialValue === "number") {
+                    return initialValue;
+                }
+                break;
+            case "boolean":
+                if (typeof initialValue === "boolean") {
+                    return initialValue;
+                }
+                break;
+            case "string":
+                if (typeof initialValue === "string") {
+                    return initialValue;
+                }
+                break;
+            case "null":
+            default:
+                if (initialValue === null) {
+                    return initialValue;
+                }
+        }
+    }
     if (!required) {
         return undefined;
     }
-    if (initialValue !== undefined) {
-        return initialValue;
-    }
     if (schema.default !== undefined) {
-        return schema.default;
+        switch (schema.type) {
+            case "object":
+                if (isObject(schema.default)) {
+                    return schema.default;
+                }
+                break;
+            case "array":
+                if (Array.isArray(schema.default)) {
+                    return schema.default;
+                }
+                break;
+            case "number":
+            case "integer":
+                if (typeof schema.default === "number") {
+                    return schema.default;
+                }
+                break;
+            case "boolean":
+                if (typeof schema.default === "boolean") {
+                    return schema.default;
+                }
+                break;
+            case "string":
+                if (typeof schema.default === "string") {
+                    return schema.default;
+                }
+                break;
+            case "null":
+            default:
+                if (schema.default === null) {
+                    return schema.default;
+                }
+        }
     }
     switch (schema.type) {
         case "object":
@@ -206,5 +274,127 @@ function isSame(value1, value2) {
     }
     return true;
 }
-exports.isSame = isSame;
+function switchItem(value, el, sibling) {
+    var fromIndex = +el.dataset["index"];
+    if (sibling) {
+        var toIndex = +sibling.dataset["index"];
+        value.splice(toIndex, 0, value[fromIndex]);
+        if (fromIndex > toIndex) {
+            value.splice(fromIndex + 1, 1);
+        }
+        else {
+            value.splice(fromIndex, 1);
+        }
+    }
+    else {
+        value.push(value[fromIndex]);
+        value.splice(fromIndex, 1);
+    }
+}
+exports.switchItem = switchItem;
+function getErrorMessageOfArray(value, schema, locale) {
+    if (value !== undefined) {
+        if (schema.minItems !== undefined) {
+            if (value.length < schema.minItems) {
+                return locale.error.minItems.replace("{0}", String(schema.minItems));
+            }
+        }
+        if (schema.uniqueItems) {
+            for (var i = 1; i < value.length; i++) {
+                for (var j = 0; j < i; j++) {
+                    if (isSame(value[i], value[j])) {
+                        return locale.error.uniqueItems.replace("{0}", String(j)).replace("{1}", String(i));
+                    }
+                }
+            }
+        }
+    }
+    return "";
+}
+exports.getErrorMessageOfArray = getErrorMessageOfArray;
+function getErrorMessageOfNumber(value, schema, locale) {
+    if (value !== undefined) {
+        if (schema.minimum !== undefined) {
+            if (schema.exclusiveMinimum) {
+                if (value <= schema.minimum) {
+                    return locale.error.largerThan.replace("{0}", String(schema.minimum));
+                }
+            }
+            else {
+                if (value < schema.minimum) {
+                    return locale.error.minimum.replace("{0}", String(schema.minimum));
+                }
+            }
+        }
+        if (schema.maximum !== undefined) {
+            if (schema.exclusiveMaximum) {
+                if (value >= schema.maximum) {
+                    return locale.error.smallerThan.replace("{0}", String(schema.maximum));
+                }
+            }
+            else {
+                if (value > schema.maximum) {
+                    return locale.error.maximum.replace("{0}", String(schema.maximum));
+                }
+            }
+        }
+    }
+    return "";
+}
+exports.getErrorMessageOfNumber = getErrorMessageOfNumber;
+function getErrorMessageOfString(value, schema, locale) {
+    if (value !== undefined) {
+        if (schema.minLength !== undefined
+            && value.length < schema.minLength) {
+            return locale.error.minLength.replace("{0}", String(schema.minLength));
+        }
+        if (schema.maxLength !== undefined
+            && value.length > schema.maxLength) {
+            return locale.error.maxLength.replace("{0}", String(schema.maxLength));
+        }
+        if (schema.pattern !== undefined
+            && !new RegExp(schema.pattern).test(value)) {
+            return locale.error.pattern.replace("{0}", String(schema.pattern));
+        }
+    }
+    return "";
+}
+exports.getErrorMessageOfString = getErrorMessageOfString;
+function toggleOptional(value, schema, initialValue) {
+    if (value === undefined) {
+        return getDefaultValue(true, schema, initialValue);
+    }
+    else {
+        return undefined;
+    }
+}
+exports.toggleOptional = toggleOptional;
+function recordInvalidPropertiesOfObject(invalidProperties, isValid, property) {
+    var index = invalidProperties.indexOf(property);
+    if (isValid) {
+        if (index !== -1) {
+            invalidProperties.splice(index, 1);
+        }
+    }
+    else {
+        if (index === -1) {
+            invalidProperties.push(property);
+        }
+    }
+}
+exports.recordInvalidPropertiesOfObject = recordInvalidPropertiesOfObject;
+function recordInvalidIndexesOfArray(invalidIndexes, isValid, i) {
+    var index = invalidIndexes.indexOf(i);
+    if (isValid) {
+        if (index !== -1) {
+            invalidIndexes.splice(index, 1);
+        }
+    }
+    else {
+        if (index === -1) {
+            invalidIndexes.push(i);
+        }
+    }
+}
+exports.recordInvalidIndexesOfArray = recordInvalidIndexesOfArray;
 //# sourceMappingURL=common.js.map

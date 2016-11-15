@@ -10,6 +10,7 @@ export declare const arrayEditor: {
         drak: undefined;
         errorMessage: undefined;
         buttonGroupStyleString: string;
+        invalidIndexes: never[];
     };
     beforeDestroy(this: This): void;
     computed: {
@@ -22,14 +23,17 @@ export declare const arrayEditor: {
         validate(this: This): void;
         addItem(this: This): void;
         onDeleteFunction(this: This, i: number): void;
-        onChange(this: This, i: number, value: common.ValueType): void;
+        onChange(this: This, i: number, {value, isValid}: {
+            value: common.ValueType;
+            isValid: boolean;
+        }): void;
     };
 };
 export declare type This = {
     drak: common.dragula.Drake;
-    $emit: (event: string, ...args: any[]) => void;
+    $emit: (event: string, args: common.ValidityValue<common.ValueType[] | undefined>) => void;
     required: boolean;
-    schema: any;
+    schema: common.ArraySchema;
     initialValue: common.ValueType[];
     value?: common.ValueType[];
     collapsed: boolean;
@@ -38,4 +42,5 @@ export declare type This = {
     renderSwitch: number;
     validate: () => void;
     $el: HTMLElement;
+    invalidIndexes: number[];
 };

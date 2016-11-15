@@ -10,21 +10,28 @@ export declare const objectEditor: {
         buttonGroupStyle: {
             marginLeft: string;
         };
+        invalidProperties: never[];
     };
     methods: {
-        isRequired(this: This, property: string): any;
+        isRequired(this: This, property: string): boolean | undefined;
         collapseOrExpand(this: This): void;
         toggleOptional(this: This): void;
-        onChange(this: This, property: string, value: common.ValueType): void;
+        onChange(this: This, property: string, {value, isValid}: {
+            value: common.ValueType;
+            isValid: boolean;
+        }): void;
     };
 };
 export declare type This = {
-    $emit: (event: string, ...args: any[]) => void;
+    $emit: (event: string, args: common.ValidityValue<{
+        [name: string]: common.ValueType;
+    } | undefined>) => void;
     value?: {
         [name: string]: common.ValueType;
     };
     collapsed: boolean;
-    schema: any;
+    schema: common.ObjectSchema;
     initialValue: any;
     required: boolean;
+    invalidProperties: string[];
 };

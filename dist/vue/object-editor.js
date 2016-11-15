@@ -19,11 +19,12 @@ exports.objectEditor = {
                 _loop_1(property);
             }
         }
-        this.$emit("update-value", value);
+        this.$emit("update-value", { value: value, isValid: true });
         return {
             collapsed: false,
             value: value,
             buttonGroupStyle: common.buttonGroupStyle,
+            invalidProperties: [],
         };
     },
     methods: {
@@ -34,17 +35,14 @@ exports.objectEditor = {
             this.collapsed = !this.collapsed;
         },
         toggleOptional: function () {
-            if (this.value === undefined) {
-                this.value = common.getDefaultValue(true, this.schema, this.initialValue);
-            }
-            else {
-                this.value = undefined;
-            }
-            this.$emit("update-value", this.value);
+            this.value = common.toggleOptional(this.value, this.schema, this.initialValue);
+            this.$emit("update-value", { value: this.value, isValid: this.invalidProperties.length === 0 });
         },
-        onChange: function (property, value) {
+        onChange: function (property, _a) {
+            var value = _a.value, isValid = _a.isValid;
             this.value[property] = value;
-            this.$emit("update-value", this.value);
+            common.recordInvalidPropertiesOfObject(this.invalidProperties, isValid, property);
+            this.$emit("update-value", { value: this.value, isValid: this.invalidProperties.length === 0 });
         },
     },
 };

@@ -5,7 +5,10 @@ export declare class ArrayEditorComponent {
     schema: common.ArraySchema;
     initialValue: common.ValueType[];
     title?: string;
-    updateValue: EventEmitter<{}>;
+    updateValue: EventEmitter<{
+        value: common.ValueType[] | undefined;
+        isValid: boolean;
+    }>;
     theme: common.Theme;
     icon: common.Icon;
     locale: common.Locale;
@@ -20,6 +23,7 @@ export declare class ArrayEditorComponent {
     drak: common.dragula.Drake;
     errorMessage: string;
     buttonGroupStyleString: string;
+    invalidIndexes: number[];
     getValue(): common.ValueType[];
     ngOnInit(): void;
     ngAfterViewInit(): void;
@@ -31,5 +35,5 @@ export declare class ArrayEditorComponent {
     addItem(): void;
     hasDeleteButtonFunction(): boolean;
     onDeleteFunction(i: number): void;
-    onChange(i: number, value: common.ValueType): void;
+    onChange(i: number, {value, isValid}: common.ValidityValue<common.ValueType>): void;
 }

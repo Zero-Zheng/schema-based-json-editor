@@ -11,24 +11,19 @@ var NumberEditor = (function (_super) {
             _this.value = _this.props.schema.type === "integer" ? common.toInteger(e.currentTarget.value) : common.toNumber(e.currentTarget.value);
             _this.validate();
             _this.setState({ value: _this.value });
-            _this.props.updateValue(_this.value);
+            _this.props.updateValue(_this.value, !_this.errorMessage);
         };
         this.toggleOptional = function () {
-            if (_this.value === undefined) {
-                _this.value = common.getDefaultValue(true, _this.props.schema, _this.props.initialValue);
-                _this.validate();
-            }
-            else {
-                _this.value = undefined;
-            }
+            _this.value = common.toggleOptional(_this.value, _this.props.schema, _this.props.initialValue);
+            _this.validate();
             _this.setState({ value: _this.value });
-            _this.props.updateValue(_this.value);
+            _this.props.updateValue(_this.value, !_this.errorMessage);
         };
         this.value = common.getDefaultValue(this.props.required, this.props.schema, this.props.initialValue);
         this.validate();
     }
     NumberEditor.prototype.componentDidMount = function () {
-        this.props.updateValue(this.value);
+        this.props.updateValue(this.value, !this.errorMessage);
     };
     NumberEditor.prototype.render = function () {
         var control = null;
@@ -61,37 +56,7 @@ var NumberEditor = (function (_super) {
             errorDescription));
     };
     NumberEditor.prototype.validate = function () {
-        if (this.value !== undefined) {
-            if (this.props.schema.minimum !== undefined) {
-                if (this.props.schema.exclusiveMinimum) {
-                    if (this.value <= this.props.schema.minimum) {
-                        this.errorMessage = this.props.locale.error.largerThan.replace("{0}", String(this.props.schema.minimum));
-                        return;
-                    }
-                }
-                else {
-                    if (this.value < this.props.schema.minimum) {
-                        this.errorMessage = this.props.locale.error.minimum.replace("{0}", String(this.props.schema.minimum));
-                        return;
-                    }
-                }
-            }
-            if (this.props.schema.maximum !== undefined) {
-                if (this.props.schema.exclusiveMaximum) {
-                    if (this.value >= this.props.schema.maximum) {
-                        this.errorMessage = this.props.locale.error.smallerThan.replace("{0}", String(this.props.schema.maximum));
-                        return;
-                    }
-                }
-                else {
-                    if (this.value > this.props.schema.maximum) {
-                        this.errorMessage = this.props.locale.error.maximum.replace("{0}", String(this.props.schema.maximum));
-                        return;
-                    }
-                }
-            }
-        }
-        this.errorMessage = "";
+        this.errorMessage = common.getErrorMessageOfNumber(this.value, this.props.schema, this.props.locale);
     };
     return NumberEditor;
 }(React.Component));

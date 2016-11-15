@@ -8,8 +8,8 @@ export declare const stringEditor: {
     };
     beforeMount(this: This): void;
     methods: {
-        useTextArea(this: This): boolean;
-        useInput(this: This): boolean;
+        useTextArea(this: This): boolean | undefined;
+        useInput(this: This): boolean | undefined;
         useSelect(this: This): boolean;
         onChange(this: This, e: {
             target: {
@@ -21,11 +21,11 @@ export declare const stringEditor: {
     };
 };
 export declare type This = {
-    $emit: (event: string, ...args: any[]) => void;
+    $emit: (event: string, args: common.ValidityValue<common.ValueType | undefined>) => void;
     validate: () => void;
     value?: string;
     errorMessage?: string;
-    schema: any;
+    schema: common.StringSchema;
     initialValue: string;
     locale: common.Locale;
     readonly: boolean;

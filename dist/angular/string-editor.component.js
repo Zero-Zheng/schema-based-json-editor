@@ -7,20 +7,15 @@ var StringEditorComponent = (function () {
         this.updateValue = new core_1.EventEmitter();
         this.onDelete = new core_1.EventEmitter();
         this.toggleOptional = function () {
-            if (_this.value === undefined) {
-                _this.value = common.getDefaultValue(true, _this.schema, _this.initialValue);
-                _this.validate();
-            }
-            else {
-                _this.value = undefined;
-            }
-            _this.updateValue.emit(_this.value);
+            _this.value = common.toggleOptional(_this.value, _this.schema, _this.initialValue);
+            _this.validate();
+            _this.updateValue.emit({ value: _this.value, isValid: !_this.errorMessage });
         };
     }
     StringEditorComponent.prototype.ngOnInit = function () {
         this.value = common.getDefaultValue(this.required, this.schema, this.initialValue);
         this.validate();
-        this.updateValue.emit(this.value);
+        this.updateValue.emit({ value: this.value, isValid: !this.errorMessage });
     };
     StringEditorComponent.prototype.useTextArea = function () {
         return this.value !== undefined && (this.schema.enum === undefined || this.readonly || this.schema.readonly) && this.schema.format === "textarea";
@@ -34,27 +29,10 @@ var StringEditorComponent = (function () {
     StringEditorComponent.prototype.onChange = function (e) {
         this.value = e.target.value;
         this.validate();
-        this.updateValue.emit(this.value);
+        this.updateValue.emit({ value: this.value, isValid: !this.errorMessage });
     };
     StringEditorComponent.prototype.validate = function () {
-        if (this.value !== undefined) {
-            if (this.schema.minLength !== undefined
-                && this.value.length < this.schema.minLength) {
-                this.errorMessage = this.locale.error.minLength.replace("{0}", String(this.schema.minLength));
-                return;
-            }
-            if (this.schema.maxLength !== undefined
-                && this.value.length > this.schema.maxLength) {
-                this.errorMessage = this.locale.error.maxLength.replace("{0}", String(this.schema.maxLength));
-                return;
-            }
-            if (this.schema.pattern !== undefined
-                && !new RegExp(this.schema.pattern).test(this.value)) {
-                this.errorMessage = this.locale.error.pattern.replace("{0}", String(this.schema.pattern));
-                return;
-            }
-        }
-        this.errorMessage = "";
+        this.errorMessage = common.getErrorMessageOfString(this.value, this.schema, this.locale);
     };
     StringEditorComponent.prototype.trackByFunction = function (index, value) {
         return index;

@@ -26,27 +26,23 @@ export const nullEditor = {
     props: ["schema", "initialValue", "title", "theme", "icon", "locale", "readonly", "required", "hasDeleteButton"],
     data: function (this: This) {
         const value = common.getDefaultValue(this.required, this.schema, this.initialValue) as null;
-        this.$emit("update-value", value);
+        this.$emit("update-value", { value, isValid: true });
         return {
             value,
         };
     },
     methods: {
         toggleOptional(this: This) {
-            if (this.value === undefined) {
-                this.value = common.getDefaultValue(true, this.schema, this.initialValue) as null;
-            } else {
-                this.value = undefined;
-            }
-            this.$emit("update-value", this.value);
+            this.value = common.toggleOptional(this.value, this.schema, this.initialValue) as null | undefined;
+            this.$emit("update-value", { value: this.value, isValid: true });
         },
     },
 };
 
 export type This = {
-    $emit: (event: string, ...args: any[]) => void;
+    $emit: (event: string, args: common.ValidityValue<null | undefined>) => void;
     value?: null;
-    schema: any;
+    schema: common.NullSchema;
     initialValue: null;
     required: boolean;
 }

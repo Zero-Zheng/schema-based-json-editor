@@ -50,7 +50,7 @@ export const arrayEditor = {
     props: ["schema", "initialValue", "title", "theme", "icon", "locale", "readonly", "required", "hasDeleteButton"],
     data: function(this: This) {
         const value = common.getDefaultValue(this.required, this.schema, this.initialValue) as common.ValueType[];
-        this.$emit("update-value", value);
+        this.$emit("update-value", { value, isValid: !this.errorMessage });
         return {
             renderSwitch: 1,
             collapsed: false,
@@ -58,6 +58,7 @@ export const arrayEditor = {
             drak: undefined,
             errorMessage: undefined,
             buttonGroupStyleString: common.buttonGroupStyleString,
+            invalidIndexes: [],
         };
     },
     beforeDestroy(this: This) {
@@ -79,21 +80,9 @@ export const arrayEditor = {
         this.drak = common.dragula([container]);
         this.drak.on("drop", (el: HTMLElement, target: HTMLElement, source: HTMLElement, sibling: HTMLElement | null) => {
             if (this.value) {
-                const fromIndex = +el.dataset["index"];
-                if (sibling) {
-                    const toIndex = +sibling.dataset["index"];
-                    this.value.splice(toIndex, 0, this.value[fromIndex]);
-                    if (fromIndex > toIndex) {
-                        this.value.splice(fromIndex + 1, 1);
-                    } else {
-                        this.value.splice(fromIndex, 1);
-                    }
-                } else {
-                    this.value.push(this.value[fromIndex]);
-                    this.value.splice(fromIndex, 1);
-                }
+                common.switchItem(this.value, el, sibling);
                 this.renderSwitch = -this.renderSwitch;
-                this.$emit("update-value", this.value);
+                this.$emit("update-value", { value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
             }
         });
     },
@@ -102,58 +91,37 @@ export const arrayEditor = {
             this.collapsed = !this.collapsed;
         },
         toggleOptional(this: This) {
-            if (this.value === undefined) {
-                this.value = common.getDefaultValue(true, this.schema, this.initialValue) as common.ValueType[];
-            } else {
-                this.value = undefined;
-            }
-            this.$emit("update-value", this.value);
+            this.value = common.toggleOptional(this.value, this.schema, this.initialValue) as common.ValueType[] | undefined;
+            this.validate();
+            this.$emit("update-value", { value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
         },
         validate(this: This) {
-            if (this.value !== undefined) {
-                if (this.schema.minItems !== undefined) {
-                    if (this.value.length < this.schema.minItems) {
-                        this.errorMessage = this.locale.error.minItems.replace("{0}", String(this.schema.minItems));
-                        return;
-                    }
-                }
-                if (this.schema.uniqueItems) {
-                    for (let i = 1; i < this.value.length; i++) {
-                        for (let j = 0; j < i; j++) {
-                            if (common.isSame(this.value[i], this.value[j])) {
-                                this.errorMessage = this.locale.error.uniqueItems.replace("{0}", String(j)).replace("{1}", String(i));
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
-
-            this.errorMessage = "";
+            this.errorMessage = common.getErrorMessageOfArray(this.value, this.schema, this.locale);
         },
         addItem(this: This) {
             this.value!.push(common.getDefaultValue(true, this.schema.items, undefined) !);
-            this.$emit("update-value", this.value);
+            this.$emit("update-value", { value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
         },
         onDeleteFunction(this: This, i: number) {
             this.value!.splice(i, 1);
             this.renderSwitch = -this.renderSwitch;
-            this.$emit("update-value", this.value);
             this.validate();
+            this.$emit("update-value", { value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
         },
-        onChange(this: This, i: number, value: common.ValueType) {
+        onChange(this: This, i: number, {value, isValid}: common.ValidityValue<common.ValueType>) {
             this.value![i] = value;
-            this.$emit("update-value", this.value);
             this.validate();
+            common.recordInvalidIndexesOfArray(this.invalidIndexes, isValid, i);
+            this.$emit("update-value", { value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
         },
     },
 };
 
 export type This = {
     drak: common.dragula.Drake;
-    $emit: (event: string, ...args: any[]) => void;
+    $emit: (event: string, args: common.ValidityValue<common.ValueType[] | undefined>) => void;
     required: boolean;
-    schema: any;
+    schema: common.ArraySchema;
     initialValue: common.ValueType[];
     value?: common.ValueType[];
     collapsed: boolean;
@@ -162,4 +130,5 @@ export type This = {
     renderSwitch: number;
     validate: () => void;
     $el: HTMLElement;
+    invalidIndexes: number[];
 }

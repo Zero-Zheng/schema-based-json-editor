@@ -41,7 +41,7 @@ export const objectEditor = {
     </div >
     `,
     props: ["schema", "initialValue", "title", "theme", "icon", "locale", "readonly", "required", "hasDeleteButton"],
-    data: function (this: This) {
+    data: function(this: This) {
         const value = common.getDefaultValue(this.required, this.schema, this.initialValue) as { [name: string]: common.ValueType };
         if (!this.collapsed && value !== undefined) {
             for (const property in this.schema.properties) {
@@ -50,11 +50,12 @@ export const objectEditor = {
                 value[property] = common.getDefaultValue(required, schema, value[property]) as { [name: string]: common.ValueType };
             }
         }
-        this.$emit("update-value", value);
+        this.$emit("update-value", { value, isValid: true });
         return {
             collapsed: false,
             value,
             buttonGroupStyle: common.buttonGroupStyle,
+            invalidProperties: [],
         };
     },
     methods: {
@@ -65,25 +66,23 @@ export const objectEditor = {
             this.collapsed = !this.collapsed;
         },
         toggleOptional(this: This) {
-            if (this.value === undefined) {
-                this.value = common.getDefaultValue(true, this.schema, this.initialValue) as { [name: string]: common.ValueType };
-            } else {
-                this.value = undefined;
-            }
-            this.$emit("update-value", this.value);
+            this.value = common.toggleOptional(this.value, this.schema, this.initialValue) as { [name: string]: common.ValueType } | undefined;
+            this.$emit("update-value", { value: this.value, isValid: this.invalidProperties.length === 0 });
         },
-        onChange(this: This, property: string, value: common.ValueType) {
+        onChange(this: This, property: string, {value, isValid}: common.ValidityValue<common.ValueType>) {
             this.value![property] = value;
-            this.$emit("update-value", this.value);
+            common.recordInvalidPropertiesOfObject(this.invalidProperties, isValid, property);
+            this.$emit("update-value", { value: this.value, isValid: this.invalidProperties.length === 0 });
         },
     },
 };
 
 export type This = {
-    $emit: (event: string, ...args: any[]) => void;
+    $emit: (event: string, args: common.ValidityValue<{ [name: string]: common.ValueType } | undefined>) => void;
     value?: { [name: string]: common.ValueType };
     collapsed: boolean;
-    schema: any;
+    schema: common.ObjectSchema;
     initialValue: any;
     required: boolean;
+    invalidProperties: string[];
 }

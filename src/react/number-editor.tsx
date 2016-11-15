@@ -11,7 +11,7 @@ export class NumberEditor extends React.Component<common.Props<common.NumberSche
         this.validate();
     }
     componentDidMount() {
-        this.props.updateValue(this.value);
+        this.props.updateValue(this.value, !this.errorMessage);
     }
     render() {
         let control: JSX.Element | null = null;
@@ -65,48 +65,15 @@ export class NumberEditor extends React.Component<common.Props<common.NumberSche
         this.value = this.props.schema.type === "integer" ? common.toInteger(e.currentTarget.value) : common.toNumber(e.currentTarget.value);
         this.validate();
         this.setState({ value: this.value });
-        this.props.updateValue(this.value);
+        this.props.updateValue(this.value, !this.errorMessage);
     }
     private validate() {
-        if (this.value !== undefined) {
-            if (this.props.schema.minimum !== undefined) {
-                if (this.props.schema.exclusiveMinimum) {
-                    if (this.value <= this.props.schema.minimum) {
-                        this.errorMessage = this.props.locale.error.largerThan.replace("{0}", String(this.props.schema.minimum));
-                        return;
-                    }
-                } else {
-                    if (this.value < this.props.schema.minimum) {
-                        this.errorMessage = this.props.locale.error.minimum.replace("{0}", String(this.props.schema.minimum));
-                        return;
-                    }
-                }
-            }
-            if (this.props.schema.maximum !== undefined) {
-                if (this.props.schema.exclusiveMaximum) {
-                    if (this.value >= this.props.schema.maximum) {
-                        this.errorMessage = this.props.locale.error.smallerThan.replace("{0}", String(this.props.schema.maximum));
-                        return;
-                    }
-                } else {
-                    if (this.value > this.props.schema.maximum) {
-                        this.errorMessage = this.props.locale.error.maximum.replace("{0}", String(this.props.schema.maximum));
-                        return;
-                    }
-                }
-            }
-        }
-
-        this.errorMessage = "";
+        this.errorMessage = common.getErrorMessageOfNumber(this.value, this.props.schema, this.props.locale);
     }
     private toggleOptional = () => {
-        if (this.value === undefined) {
-            this.value = common.getDefaultValue(true, this.props.schema, this.props.initialValue) as number;
-            this.validate();
-        } else {
-            this.value = undefined;
-        }
+        this.value = common.toggleOptional(this.value, this.props.schema, this.props.initialValue) as number | undefined;
+        this.validate();
         this.setState({ value: this.value });
-        this.props.updateValue(this.value);
+        this.props.updateValue(this.value, !this.errorMessage);
     }
 }

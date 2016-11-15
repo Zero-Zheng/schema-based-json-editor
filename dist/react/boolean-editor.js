@@ -10,22 +10,17 @@ var BooleanEditor = (function (_super) {
         this.onChange = function (e) {
             _this.value = e.currentTarget.checked;
             _this.setState({ value: _this.value });
-            _this.props.updateValue(_this.value);
+            _this.props.updateValue(_this.value, true);
         };
         this.toggleOptional = function () {
-            if (_this.value === undefined) {
-                _this.value = common.getDefaultValue(true, _this.props.schema, _this.props.initialValue === undefined);
-            }
-            else {
-                _this.value = undefined;
-            }
+            _this.value = common.toggleOptional(_this.value, _this.props.schema, _this.props.initialValue);
             _this.setState({ value: _this.value });
-            _this.props.updateValue(_this.value);
+            _this.props.updateValue(_this.value, true);
         };
         this.value = common.getDefaultValue(this.props.required, this.props.schema, this.props.initialValue);
     }
     BooleanEditor.prototype.componentDidMount = function () {
-        this.props.updateValue(this.value);
+        this.props.updateValue(this.value, true);
     };
     BooleanEditor.prototype.render = function () {
         var control = null;

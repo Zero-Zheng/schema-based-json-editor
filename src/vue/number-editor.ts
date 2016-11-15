@@ -45,7 +45,7 @@ export const numberEditor = {
     props: ["schema", "initialValue", "title", "theme", "icon", "locale", "readonly", "required", "hasDeleteButton"],
     data: function (this: This) {
         const value = common.getDefaultValue(this.required, this.schema, this.initialValue) as number;
-        this.$emit("update-value", value);
+        this.$emit("update-value", { value, isValid: !this.errorMessage });
         return {
             value,
             errorMessage: undefined,
@@ -61,56 +61,24 @@ export const numberEditor = {
         onChange(this: This, e: { target: { value: string } }) {
             this.value = this.schema.type === "integer" ? common.toInteger(e.target.value) : common.toNumber(e.target.value);
             this.validate();
-            this.$emit("update-value", this.value);
+            this.$emit("update-value", { value: this.value, isValid: !this.errorMessage });
         },
         validate(this: This) {
-            if (this.value !== undefined) {
-                if (this.schema.minimum !== undefined) {
-                    if (this.schema.exclusiveMinimum) {
-                        if (this.value <= this.schema.minimum) {
-                            this.errorMessage = this.locale.error.largerThan.replace("{0}", String(this.schema.minimum));
-                            return;
-                        }
-                    } else {
-                        if (this.value < this.schema.minimum) {
-                            this.errorMessage = this.locale.error.minimum.replace("{0}", String(this.schema.minimum));
-                            return;
-                        }
-                    }
-                }
-                if (this.schema.maximum !== undefined) {
-                    if (this.schema.exclusiveMaximum) {
-                        if (this.value >= this.schema.maximum) {
-                            this.errorMessage = this.locale.error.smallerThan.replace("{0}", String(this.schema.maximum));
-                            return;
-                        }
-                    } else {
-                        if (this.value > this.schema.maximum) {
-                            this.errorMessage = this.locale.error.maximum.replace("{0}", String(this.schema.maximum));
-                            return;
-                        }
-                    }
-                }
-            }
-
-            this.errorMessage = "";
+            this.errorMessage = common.getErrorMessageOfNumber(this.value, this.schema, this.locale);
         },
         toggleOptional(this: This) {
-            if (this.value === undefined) {
-                this.value = common.getDefaultValue(true, this.schema, this.initialValue) as number;
-            } else {
-                this.value = undefined;
-            }
-            this.$emit("update-value", this.value);
+            this.value = common.toggleOptional(this.value, this.schema, this.initialValue) as number | undefined;
+            this.validate();
+            this.$emit("update-value", { value: this.value, isValid: !this.errorMessage });
         },
     },
 };
 
 export type This = {
-    $emit: (event: string, ...args: any[]) => void;
+    $emit: (event: string, args: common.ValidityValue<number | undefined>) => void;
     value?: number;
     errorMessage?: string;
-    schema: any;
+    schema: common.NumberSchema;
     initialValue: number;
     locale: common.Locale;
     validate: () => void;
