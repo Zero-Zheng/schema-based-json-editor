@@ -1,7 +1,7 @@
 import * as Vue from "vue";
 import { schema } from "../schema";
 
-import "../../dist/vue/index";
+import "../../dist/vue";
 import * as common from "../../dist/common";
 
 /* tslint:disable:only-arrow-functions */
@@ -13,7 +13,7 @@ type This = {
     value: any;
     color: string;
     valueString: string;
-}
+};
 
 new Vue({
     el: "#container",
@@ -25,6 +25,7 @@ new Vue({
             color: "black",
             valueString: JSON.stringify(value, null, "  "),
             schemaString: JSON.stringify(schema, null, "  "),
+            locale: navigator.language ? navigator.language.toLowerCase() : undefined,
         };
     },
     methods: {

@@ -29,7 +29,7 @@ import * as common from "../../dist/common";
                 (updateValue)="updateValue($event)"
                 theme="bootstrap3"
                 icon="fontawesome4"
-                locale="zh-cn">
+                [locale]="locale">
             </json-editor>
         </div>
         <div style="width: 400px; margin: 10px; float: left; overflow-y: scroll; height: 600px">
@@ -44,6 +44,7 @@ export class MainComponent {
     schemaString = JSON.stringify(schema, null, "  ");
     value: any = {};
     color = "black";
+    locale = navigator.language ? navigator.language.toLowerCase() : undefined;
     getValueString() {
         return JSON.stringify(this.value, null, "  ");
     }
@@ -56,7 +57,7 @@ export class MainComponent {
 import { NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
 import { FormsModule } from "@angular/forms";
-import { JSONEditorComponent, BooleanEditorComponent, ArrayEditorComponent, EditorComponent, NullEditorComponent, NumberEditorComponent, ObjectEditorComponent, StringEditorComponent, TitleEditorComponent, IconComponent } from "../../dist/angular/index";
+import { JSONEditorComponent, BooleanEditorComponent, ArrayEditorComponent, EditorComponent, NullEditorComponent, NumberEditorComponent, ObjectEditorComponent, StringEditorComponent, TitleEditorComponent, IconComponent } from "../../dist/angular";
 
 @NgModule({
     imports: [BrowserModule, FormsModule],
