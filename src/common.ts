@@ -171,7 +171,7 @@ export function getLocale(name: string | undefined | Locale): Locale {
         return defaultLocale;
     }
     if (typeof name === "string") {
-        return locales[name] || defaultLocale;
+        return locales[name.toLowerCase()] || defaultLocale;
     }
     return name;
 };
@@ -499,4 +499,18 @@ export function recordInvalidIndexesOfArray(invalidIndexes: number[], isValid: b
             invalidIndexes.push(i);
         }
     }
+}
+
+const imageExtensions = [".png", ".jpg", ".bmp", ".gif"];
+
+export function isImageUrl(value?: string) {
+    if (!value || value.length <= "https://".length) {
+        return false;
+    }
+    if (value.substr(0, "http://".length) !== "http://"
+        && value.substr(0, "https://".length) !== "https://") {
+        return false;
+    }
+    const extensionName = value.substr(value.length - 4, 4);
+    return imageExtensions.indexOf(extensionName) !== -1;
 }

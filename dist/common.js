@@ -86,7 +86,7 @@ function getLocale(name) {
         return exports.defaultLocale;
     }
     if (typeof name === "string") {
-        return exports.locales[name] || exports.defaultLocale;
+        return exports.locales[name.toLowerCase()] || exports.defaultLocale;
     }
     return name;
 }
@@ -397,4 +397,17 @@ function recordInvalidIndexesOfArray(invalidIndexes, isValid, i) {
     }
 }
 exports.recordInvalidIndexesOfArray = recordInvalidIndexesOfArray;
+var imageExtensions = [".png", ".jpg", ".bmp", ".gif"];
+function isImageUrl(value) {
+    if (!value || value.length <= "https://".length) {
+        return false;
+    }
+    if (value.substr(0, "http://".length) !== "http://"
+        && value.substr(0, "https://".length) !== "https://") {
+        return false;
+    }
+    var extensionName = value.substr(value.length - 4, 4);
+    return imageExtensions.indexOf(extensionName) !== -1;
+}
+exports.isImageUrl = isImageUrl;
 //# sourceMappingURL=common.js.map
