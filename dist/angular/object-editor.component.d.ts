@@ -1,5 +1,8 @@
+/// <reference types="dragula" />
+/// <reference types="highlight.js" />
 import { EventEmitter } from "@angular/core";
 import * as common from "../common";
+import { hljs, dragula } from "../lib";
 export declare class ObjectEditorComponent {
     schema: common.ObjectSchema;
     initialValue: {
@@ -19,6 +22,10 @@ export declare class ObjectEditorComponent {
     readonly?: boolean;
     required?: boolean;
     hasDeleteButton: boolean;
+    dragula?: typeof dragula;
+    md?: any;
+    hljs?: typeof hljs;
+    forceHttps?: boolean;
     collapsed: boolean;
     value?: {
         [name: string]: common.ValueType;
@@ -27,9 +34,7 @@ export declare class ObjectEditorComponent {
         name: string;
         value: common.ValueType;
     }[];
-    buttonGroupStyle: {
-        marginLeft: string;
-    };
+    buttonGroupStyle: string;
     invalidProperties: string[];
     ngOnInit(): void;
     isRequired(property: string): boolean | undefined;
@@ -41,5 +46,5 @@ export declare class ObjectEditorComponent {
     onChange(property: string, {value, isValid}: common.ValidityValue<{
         [name: string]: common.ValueType;
     }>): void;
-    hasDeleteButtonFunction(): boolean;
+    readonly hasDeleteButtonFunction: boolean;
 }

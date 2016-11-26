@@ -5,13 +5,13 @@ export declare const numberEditor: {
     data: (this: This) => {
         value: number;
         errorMessage: undefined;
-        buttonGroupStyle: {
-            marginLeft: string;
-        };
+        buttonGroupStyle: string;
     };
-    methods: {
+    computed: {
         useInput(this: This): boolean | undefined;
         useSelect(this: This): boolean;
+    };
+    methods: {
         onChange(this: This, e: {
             target: {
                 value: string;

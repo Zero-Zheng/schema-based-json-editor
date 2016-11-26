@@ -15,7 +15,11 @@ export const editor = {
             :required="required"
             @update-value="$emit('update-value', arguments[0])"
             @delete="$emit('delete')"
-            :has-delete-button="hasDeleteButton">
+            :has-delete-button="hasDeleteButton"
+            :dragula="dragula"
+            :md="md"
+            :hljs="hljs"
+            :forceHttps="forceHttps">
         </object-editor>
         <array-editor v-if="schema.type === 'array'"
             :schema="schema"
@@ -27,7 +31,11 @@ export const editor = {
             :required="required"
             @update-value="$emit('update-value', arguments[0])"
             @delete="$emit('delete')"
-            :has-delete-button="hasDeleteButton">
+            :has-delete-button="hasDeleteButton"
+            :dragula="dragula"
+            :md="md"
+            :hljs="hljs"
+            :forceHttps="forceHttps">
         </array-editor>
         <number-editor v-if="schema.type === 'number' || schema.type === 'integer'"
             :schema="schema"
@@ -75,9 +83,13 @@ export const editor = {
             :required="required"
             @update-value="$emit('update-value', arguments[0])"
             @delete="$emit('delete')"
-            :has-delete-button="hasDeleteButton">
+            :has-delete-button="hasDeleteButton"
+            :dragula="dragula"
+            :md="md"
+            :hljs="hljs"
+            :forceHttps="forceHttps">
         </string-editor>
     </div>
     `,
-    props: ["schema", "initialValue", "title", "theme", "icon", "locale", "readonly", "required", "hasDeleteButton"],
+    props: ["schema", "initialValue", "title", "theme", "icon", "locale", "readonly", "required", "hasDeleteButton", "dragula", "md", "hljs", "forceHttps"],
 };

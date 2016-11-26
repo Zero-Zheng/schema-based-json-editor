@@ -10,6 +10,12 @@ export const objectEditor = {
         <h3>
             {{title || schema.title}}
             <div :class="theme.buttonGroup" :style="buttonGroupStyle">
+                <div v-if="!required && (value === undefined || !schema.readonly)" :class="theme.optionalCheckbox">
+                    <label>
+                        <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" :disabled="readonly || schema.readonly" />
+                        is undefined
+                    </label>
+                </div>
                 <button :class="theme.button" @click="collapseOrExpand()">
                     <icon :icon="icon" :text="collapsed ? icon.expand : icon.collapse"></icon>
                 </button>
@@ -17,12 +23,6 @@ export const objectEditor = {
             </div>
         </h3>
         <p :class="theme.help">{{schema.description}}</p>
-        <div v-if="!required" :class="theme.optionalCheckbox">
-            <label>
-                <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" />
-                is undefined
-            </label>
-        </div>
         <div v-if="!collapsed && value !== undefined" :class="theme.rowContainer">
             <editor v-for="(propertySchema, property, i) in schema.properties"
                 :key="i"
@@ -35,12 +35,16 @@ export const objectEditor = {
                 :locale="locale"
                 :required="isRequired(property)"
                 :readonly="readonly || schema.readonly"
-                :has-delete-button="hasDeleteButton">
+                :has-delete-button="hasDeleteButton"
+                :dragula="dragula"
+                :md="md"
+                :hljs="hljs"
+                :forceHttps="forceHttps">
             </editor>
         </div>
     </div >
     `,
-    props: ["schema", "initialValue", "title", "theme", "icon", "locale", "readonly", "required", "hasDeleteButton"],
+    props: ["schema", "initialValue", "title", "theme", "icon", "locale", "readonly", "required", "hasDeleteButton", "dragula", "md", "hljs", "forceHttps"],
     data: function(this: This) {
         const value = common.getDefaultValue(this.required, this.schema, this.initialValue) as { [name: string]: common.ValueType };
         if (!this.collapsed && value !== undefined) {
@@ -54,7 +58,7 @@ export const objectEditor = {
         return {
             collapsed: false,
             value,
-            buttonGroupStyle: common.buttonGroupStyle,
+            buttonGroupStyle: common.buttonGroupStyleString,
             invalidProperties: [],
         };
     },

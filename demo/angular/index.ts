@@ -14,6 +14,11 @@ import { schema } from "../schema";
 
 import * as common from "../../dist/common";
 
+declare const require: any;
+import * as dragula from "dragula";
+const markdownit = require("markdown-it");
+import * as hljs from "highlight.js";
+
 @Component({
     selector: "app",
     template: `
@@ -29,7 +34,11 @@ import * as common from "../../dist/common";
                 (updateValue)="updateValue($event)"
                 theme="bootstrap3"
                 icon="fontawesome4"
-                [locale]="locale">
+                [locale]="locale"
+                [dragula]="dragula"
+                [markdownit]="markdownit"
+                [hljs]="hljs"
+                [forceHttps]="false">
             </json-editor>
         </div>
         <div style="width: 400px; margin: 10px; float: left; overflow-y: scroll; height: 600px">
@@ -45,6 +54,9 @@ export class MainComponent {
     value: any = {};
     color = "black";
     locale = navigator.language;
+    dragula = dragula;
+    markdownit = markdownit;
+    hljs = hljs;
     getValueString() {
         return JSON.stringify(this.value, null, "  ");
     }

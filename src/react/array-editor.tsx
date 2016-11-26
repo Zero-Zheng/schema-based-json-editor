@@ -3,13 +3,12 @@ import * as ReactDOM from "react-dom";
 import * as common from "../common";
 import { Editor } from "./editor";
 import { Icon } from "./icon";
-import * as dragula from "dragula";
 
 export class ArrayEditor extends React.Component<common.Props<common.ArraySchema, common.ValueType[]>, { value?: common.ValueType[]; collapsed?: boolean; renderSwitch?: number }> {
     private renderSwitch = 1;
     private collapsed = false;
     private value?: common.ValueType[];
-    private drak: dragula.Drake;
+    private drak?: dragula.Drake;
     private errorMessage: string;
     private invalidIndexes: number[] = [];
     constructor(props: common.Props<common.ArraySchema, common.ValueType[]>) {
@@ -19,16 +18,19 @@ export class ArrayEditor extends React.Component<common.Props<common.ArraySchema
     }
     componentDidMount() {
         this.props.updateValue(this.value, !this.errorMessage && this.invalidIndexes.length === 0);
-        const container = ReactDOM.findDOMNode(this).childNodes[this.props.required ? 2 : 3] as HTMLElement;
-        this.drak = dragula([container]);
-        this.drak.on("drop", (el: HTMLElement, target: HTMLElement, source: HTMLElement, sibling: HTMLElement | null) => {
-            if (this.value) {
-                common.switchItem(this.value, el, sibling);
-                this.renderSwitch = -this.renderSwitch;
-                this.setState({ value: this.value, renderSwitch: this.renderSwitch });
-                this.props.updateValue(this.value, !this.errorMessage && this.invalidIndexes.length === 0);
-            }
-        });
+        if (this.props.dragula) {
+            const container = ReactDOM.findDOMNode(this).childNodes[this.props.required ? 2 : 3] as HTMLElement;
+            this.drak = this.props.dragula([container]);
+            this.drak.on("drop", (el: HTMLElement, target: HTMLElement, source: HTMLElement, sibling: HTMLElement | null) => {
+                if (this.value) {
+                    common.switchItem(this.value, el, sibling);
+                    this.renderSwitch = -this.renderSwitch;
+                    this.setState({ value: this.value, renderSwitch: this.renderSwitch });
+                    this.props.updateValue(this.value, !this.errorMessage && this.invalidIndexes.length === 0);
+                }
+            });
+        }
+
     }
     componentWillUnmount() {
         if (this.drak) {
@@ -66,7 +68,11 @@ export class ArrayEditor extends React.Component<common.Props<common.ArraySchema
                             locale={this.props.locale}
                             required={true}
                             readonly={this.props.readonly || this.props.schema.readonly}
-                            onDelete={onDelete} />
+                            onDelete={onDelete}
+                            dragula={this.props.dragula}
+                            md={this.props.md}
+                            hljs={this.props.hljs}
+                            forceHttps={this.props.forceHttps} />
                     </div>
                 ));
             }
@@ -102,11 +108,14 @@ export class ArrayEditor extends React.Component<common.Props<common.ArraySchema
             );
         }
         let optionalCheckbox: JSX.Element | null = null;
-        if (!this.props.required) {
+        if (!this.props.required && (this.value === undefined || !this.props.schema.readonly)) {
             optionalCheckbox = (
                 <div className={this.props.theme.optionalCheckbox}>
                     <label>
-                        <input type="checkbox" onChange={this.toggleOptional} checked={this.value === undefined} />
+                        <input type="checkbox"
+                            onChange={this.toggleOptional}
+                            checked={this.value === undefined}
+                            disabled={this.props.readonly || this.props.schema.readonly} />
                         is undefined
                     </label>
                 </div>
@@ -121,6 +130,7 @@ export class ArrayEditor extends React.Component<common.Props<common.ArraySchema
                 <h3>
                     {this.props.title || this.props.schema.title}
                     <div className={this.props.theme.buttonGroup} style={common.buttonGroupStyle}>
+                        {optionalCheckbox}
                         <button className={this.props.theme.button} onClick={this.collapseOrExpand}>
                             <Icon icon={this.props.icon} text={this.collapsed ? this.props.icon.expand : this.props.icon.collapse}></Icon>
                         </button>
@@ -129,7 +139,6 @@ export class ArrayEditor extends React.Component<common.Props<common.ArraySchema
                     </div>
                 </h3>
                 <p className={this.props.theme.help}>{this.props.schema.description}</p>
-                {optionalCheckbox}
                 {childrenElement}
                 {errorDescription}
             </div>

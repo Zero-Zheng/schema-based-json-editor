@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, ViewChild, ElementRef } from "@angular/core";
 import * as common from "../common";
-import * as dragula from "dragula";
+import { hljs, dragula } from "../lib";
 
 @Component({
     selector: "array-editor",
@@ -9,6 +9,12 @@ import * as dragula from "dragula";
         <h3>
             {{title || schema.title}}
             <div [class]="theme.buttonGroup" [style]="buttonGroupStyleString">
+                <div *ngIf="!required && (value === undefined || !schema.readonly)" [class]="theme.optionalCheckbox">
+                    <label>
+                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="readonly || schema.readonly" />
+                        is undefined
+                    </label>
+                </div>
                 <button [class]="theme.button" (click)="collapseOrExpand()">
                     <icon [icon]="icon" [text]="collapsed ? icon.expand : icon.collapse"></icon>
                 </button>
@@ -21,12 +27,6 @@ import * as dragula from "dragula";
             </div>
         </h3>
         <p [class]="theme.help">{{schema.description}}</p>
-        <div *ngIf="!required" [class]="theme.optionalCheckbox">
-            <label>
-                <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" />
-                is undefined
-            </label>
-        </div>
         <div #drakContainer [class]="theme.rowContainer">
             <div *ngFor="let item of getValue(); let i = index; trackBy:trackByFunction" [attr.data-index]="i" [class]="theme.rowContainer">
                 <editor [schema]="schema.items"
@@ -39,7 +39,11 @@ import * as dragula from "dragula";
                     [required]="true"
                     [readonly]="readonly || schema.readonly"
                     (onDelete)="onDeleteFunction(i)"
-                    [hasDeleteButton]="true">
+                    [hasDeleteButton]="true"
+                    [dragula]="dragula"
+                    [md]="md"
+                    [hljs]="hljs"
+                    [forceHttps]="forceHttps">
                 </editor>
             </div>
         </div>
@@ -70,6 +74,14 @@ export class ArrayEditorComponent {
     required?: boolean;
     @Input()
     hasDeleteButton: boolean;
+    @Input()
+    dragula?: typeof dragula;
+    @Input()
+    md?: any;
+    @Input()
+    hljs?: typeof hljs;
+    @Input()
+    forceHttps?: boolean;
 
     @ViewChild("drakContainer")
     drakContainer: ElementRef;
@@ -77,7 +89,7 @@ export class ArrayEditorComponent {
     renderSwitch = 1;
     collapsed = false;
     value?: common.ValueType[];
-    drak: dragula.Drake;
+    drak?: dragula.Drake;
     errorMessage: string;
     buttonGroupStyleString = common.buttonGroupStyleString;
     invalidIndexes: number[] = [];
@@ -93,9 +105,9 @@ export class ArrayEditorComponent {
         this.updateValue.emit({ value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
     }
     ngAfterViewInit() {
-        if (this.drakContainer) {
+        if (this.drakContainer && this.dragula) {
             const container = this.drakContainer.nativeElement as HTMLElement;
-            this.drak = dragula([container]);
+            this.drak = this.dragula([container]);
             this.drak.on("drop", (el: HTMLElement, target: HTMLElement, source: HTMLElement, sibling: HTMLElement | null) => {
                 if (this.value) {
                     common.switchItem(this.value, el, sibling);

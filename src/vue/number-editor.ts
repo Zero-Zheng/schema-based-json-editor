@@ -10,25 +10,25 @@ export const numberEditor = {
         <label v-if="title !== undefined && title !== null && title !== ''" :class="theme.label">
             {{title}}
             <div :class="theme.buttonGroup" :style="buttonGroupStyle">
+                <div v-if="!required && (value === undefined || !schema.readonly)" :class="theme.optionalCheckbox">
+                    <label>
+                        <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" :disabled="readonly || schema.readonly" />
+                        is undefined
+                    </label>
+                </div>
                 <button v-if="hasDeleteButton" :class="theme.button" @click="$emit('delete')">
                     <icon :icon="icon" :text="icon.delete"></icon>
                 </button>
             </div>
         </label>
-        <div v-if="!required" :class="theme.optionalCheckbox">
-            <label>
-                <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" />
-                is undefined
-            </label>
-        </div>
-        <input v-if="useInput()"
+        <input v-if="useInput"
             :class="theme.formControl"
             type="number"
             @change="onChange($event)"
             @keyup="onChange($event)"
             :value="value"
             :readOnly="readonly || schema.readonly" />
-        <select v-if="useSelect()"
+        <select v-if="useSelect"
             :class="theme.formControl"
             type="number"
             @change="onChange($event)">
@@ -50,16 +50,18 @@ export const numberEditor = {
         return {
             value,
             errorMessage: undefined,
-            buttonGroupStyle: common.buttonGroupStyle,
+            buttonGroupStyle: common.buttonGroupStyleString,
         };
     },
-    methods: {
+    computed: {
         useInput(this: This) {
             return this.value !== undefined && (this.schema.enum === undefined || this.readonly || this.schema.readonly);
         },
         useSelect(this: This) {
             return this.value !== undefined && (this.schema.enum !== undefined && !this.readonly && !this.schema.readonly);
         },
+    },
+    methods: {
         onChange(this: This, e: { target: { value: string } }) {
             this.value = this.schema.type === "integer" ? common.toInteger(e.target.value) : common.toNumber(e.target.value);
             this.validate();

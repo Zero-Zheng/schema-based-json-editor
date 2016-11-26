@@ -8,17 +8,17 @@ import * as common from "../common";
         <label *ngIf="title !== undefined && title !== null && title !== ''" [class]="theme.label">
             {{title}}
             <div [class]="theme.buttonGroup" [style]="buttonGroupStyle">
+                <div *ngIf="!required && (value === undefined || !schema.readonly)" [class]="theme.optionalCheckbox">
+                    <label>
+                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="readonly || schema.readonly" />
+                        is undefined
+                    </label>
+                </div>
                 <button *ngIf="hasDeleteButton" [class]="theme.button" (click)="onDelete.emit()">
                     <icon [icon]="icon" [text]="icon.delete"></icon>
                 </button>
             </div>
         </label>
-        <div *ngIf="!required" [class]="theme.optionalCheckbox">
-            <label>
-                <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" />
-                is undefined
-            </label>
-        </div>
         <p [class]="theme.help">{{schema.description}}</p>
     </div>
     `,
@@ -48,7 +48,7 @@ export class NullEditorComponent {
     hasDeleteButton: boolean;
 
     value?: null;
-    buttonGroupStyle = common.buttonGroupStyle;
+    buttonGroupStyle = common.buttonGroupStyleString;
     ngOnInit() {
         this.value = common.getDefaultValue(this.required, this.schema, this.initialValue) as null;
         this.updateValue.emit({ value: this.value, isValid: true });

@@ -1,32 +1,33 @@
-import { Component, Input, Output, EventEmitter } from "@angular/core";
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from "@angular/core";
 import * as common from "../common";
 
 @Component({
     selector: "number-editor",
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
     <div [class]="errorMessage ? theme.errorRow : theme.row">
         <label *ngIf="title !== undefined && title !== null && title !== ''" [class]="theme.label">
             {{title}}
             <div [class]="theme.buttonGroup" [style]="buttonGroupStyle">
+                <div *ngIf="!required && (value === undefined || !schema.readonly)" [class]="theme.optionalCheckbox">
+                    <label>
+                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="readonly || schema.readonly" />
+                        is undefined
+                    </label>
+                </div>
                 <button *ngIf="hasDeleteButton" [class]="theme.button" (click)="onDelete.emit()">
                     <icon [icon]="icon" [text]="icon.delete"></icon>
                 </button>
             </div>
         </label>
-        <div *ngIf="!required" [class]="theme.optionalCheckbox">
-            <label>
-                <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" />
-                is undefined
-            </label>
-        </div>
-        <input *ngIf="useInput()"
+        <input *ngIf="useInput"
             [class]="theme.formControl"
             type="number"
             (change)="onChange($event)"
             (keyup)="onChange($event)"
             [defaultValue]="value"
             [readOnly]="readonly || schema.readonly" />
-        <select *ngIf="useSelect()"
+        <select *ngIf="useSelect"
             [class]="theme.formControl"
             type="number"
             (change)="onChange">
@@ -67,15 +68,15 @@ export class NumberEditorComponent {
 
     value?: number;
     errorMessage: string;
-    buttonGroupStyle = common.buttonGroupStyle;
+    buttonGroupStyle = common.buttonGroupStyleString;
     ngOnInit() {
         this.value = common.getDefaultValue(this.required, this.schema, this.initialValue) as number;
         this.updateValue.emit({ value: this.value, isValid: !this.errorMessage });
     }
-    useInput() {
+    get useInput() {
         return this.value !== undefined && (this.schema.enum === undefined || this.readonly || this.schema.readonly);
     }
-    useSelect() {
+    get useSelect() {
         return this.value !== undefined && (this.schema.enum !== undefined && !this.readonly && !this.schema.readonly);
     }
     onChange(e: { target: { value: string } }) {

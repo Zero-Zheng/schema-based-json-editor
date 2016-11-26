@@ -10,17 +10,17 @@ export const nullEditor = {
         <label v-if="title !== undefined && title !== null && title !== ''" :class="theme.label">
             {{title}}
             <div :class="theme.buttonGroup" :style="buttonGroupStyle">
+                <div v-if="!required && (value === undefined || !schema.readonly)" :class="theme.optionalCheckbox">
+                    <label>
+                        <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" :disabled="readonly || schema.readonly" />
+                        is undefined
+                    </label>
+                </div>
                 <button v-if="hasDeleteButton" :class="theme.button" @click="$emit('delete')">
                     <icon :icon="icon" :text="icon.delete"></icon>
                 </button>
             </div>
         </label>
-        <div v-if="!required" :class="theme.optionalCheckbox">
-            <label>
-                <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" />
-                is undefined
-            </label>
-        </div>
         <p :class="theme.help">{{schema.description}}</p>
     </div>
     `,
@@ -30,7 +30,7 @@ export const nullEditor = {
         this.$emit("update-value", { value, isValid: true });
         return {
             value,
-            buttonGroupStyle: common.buttonGroupStyle,
+            buttonGroupStyle: common.buttonGroupStyleString,
         };
     },
     methods: {

@@ -10,25 +10,36 @@ export const booleanEditor = {
         <label v-if="title !== undefined && title !== null && title !== ''" :class="theme.label">
             {{title}}
             <div :class="theme.buttonGroup" :style="buttonGroupStyle">
+                <div v-if="!required && (value === undefined || !schema.readonly)" :class="theme.optionalCheckbox">
+                    <label>
+                        <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" :disabled="readonly || schema.readonly" />
+                        is undefined
+                    </label>
+                </div>
                 <button v-if="hasDeleteButton" :class="theme.button" @click="$emit('delete')">
                     <icon :icon="icon" :text="icon.delete"></icon>
                 </button>
             </div>
         </label>
-        <div v-if="!required" :class="theme.optionalCheckbox">
-            <label>
-                <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" />
-                is undefined
-            </label>
-        </div>
-        <div v-if="value !== undefined" :class="theme.optionalCheckbox">
-            <label>
-                <input type="checkbox"
-                    @change="onChange($event)"
-                    :checked="value"
-                    :readOnly="readonly || schema.readonly" />
-                {{title}}
-            </label>
+        <div v-if="value !== undefined">
+            <div :class="theme.radiobox">
+                <label>
+                    <input type="radio"
+                        @change="onChange($event)"
+                        :checked="value"
+                        :disabled="readonly || schema.readonly" />
+                    true
+                </label>
+            </div>
+            <div :class="theme.radiobox">
+                <label>
+                    <input type="radio"
+                        @change="onChange($event)"
+                        :checked="!value"
+                        :disabled="readonly || schema.readonly" />
+                    false
+                </label>
+            </div>
         </div>
         <p :class="theme.help">{{schema.description}}</p>
     </div>
@@ -39,12 +50,12 @@ export const booleanEditor = {
         this.$emit("update-value", { value, isValid: true });
         return {
             value,
-            buttonGroupStyle: common.buttonGroupStyle,
+            buttonGroupStyle: common.buttonGroupStyleString,
         };
     },
     methods: {
         onChange(this: This, e: { target: { checked: boolean } }) {
-            this.value = e.target.checked;
+            this.value = !this.value;
             this.$emit("update-value", { value: this.value, isValid: true });
         },
         toggleOptional(this: This) {

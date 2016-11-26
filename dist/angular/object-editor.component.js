@@ -8,7 +8,7 @@ var ObjectEditorComponent = (function () {
         this.onDelete = new core_1.EventEmitter();
         this.collapsed = false;
         this.properties = [];
-        this.buttonGroupStyle = common.buttonGroupStyle;
+        this.buttonGroupStyle = common.buttonGroupStyleString;
         this.invalidProperties = [];
         this.collapseOrExpand = function () {
             _this.collapsed = !_this.collapsed;
@@ -49,9 +49,13 @@ var ObjectEditorComponent = (function () {
         common.recordInvalidPropertiesOfObject(this.invalidProperties, isValid, property);
         this.updateValue.emit({ value: this.value, isValid: this.invalidProperties.length === 0 });
     };
-    ObjectEditorComponent.prototype.hasDeleteButtonFunction = function () {
-        return this.hasDeleteButton && !this.readonly && !this.schema.readonly;
-    };
+    Object.defineProperty(ObjectEditorComponent.prototype, "hasDeleteButtonFunction", {
+        get: function () {
+            return this.hasDeleteButton && !this.readonly && !this.schema.readonly;
+        },
+        enumerable: true,
+        configurable: true
+    });
     __decorate([
         core_1.Input()
     ], ObjectEditorComponent.prototype, "schema", void 0);
@@ -85,10 +89,23 @@ var ObjectEditorComponent = (function () {
     __decorate([
         core_1.Input()
     ], ObjectEditorComponent.prototype, "hasDeleteButton", void 0);
+    __decorate([
+        core_1.Input()
+    ], ObjectEditorComponent.prototype, "dragula", void 0);
+    __decorate([
+        core_1.Input()
+    ], ObjectEditorComponent.prototype, "md", void 0);
+    __decorate([
+        core_1.Input()
+    ], ObjectEditorComponent.prototype, "hljs", void 0);
+    __decorate([
+        core_1.Input()
+    ], ObjectEditorComponent.prototype, "forceHttps", void 0);
     ObjectEditorComponent = __decorate([
         core_1.Component({
             selector: "object-editor",
-            template: "\n    <div [class]=\"theme.row\">\n        <h3>\n            {{title || schema.title}}\n            <div [class]=\"theme.buttonGroup\" [style]=\"buttonGroupStyle\">\n                <button [class]=\"theme.button\" (click)=\"collapseOrExpand()\">\n                    <icon [icon]=\"icon\" [text]=\"collapsed ? icon.expand : icon.collapse\"></icon>\n                </button>\n                <button *ngIf=\"hasDeleteButtonFunction()\" [class]=\"theme.button\" (click)=\"onDelete.emit()\">{{icon.delete}}</button>\n            </div>\n        </h3>\n        <p [class]=\"theme.help\">{{schema.description}}</p>\n        <div *ngIf=\"!required\" [class]=\"theme.optionalCheckbox\">\n            <label>\n                <input type=\"checkbox\" (change)=\"toggleOptional()\" [checked]=\"value === undefined\" />\n                is undefined\n            </label>\n        </div>\n        <div *ngIf=\"!collapsed && value !== undefined\" [class]=\"theme.rowContainer\">\n            <editor *ngFor=\"let property of properties; trackBy: trackByFunction\"\n                [schema]=\"property.value\"\n                [title]=\"property.value.title || property.name\"\n                [initialValue]=\"value[property.name]\"\n                (updateValue)=\"onChange(property.name, $event)\"\n                [theme]=\"theme\"\n                [icon]=\"icon\"\n                [locale]=\"locale\"\n                [required]=\"isRequired(property.name)\"\n                [readonly]=\"readonly || schema.readonly\">\n            </editor>\n        </div>\n    </div >\n    ",
+            changeDetection: core_1.ChangeDetectionStrategy.OnPush,
+            template: "\n    <div [class]=\"theme.row\">\n        <h3>\n            {{title || schema.title}}\n            <div [class]=\"theme.buttonGroup\" [style]=\"buttonGroupStyle\">\n                <div *ngIf=\"!required && (value === undefined || !schema.readonly)\" [class]=\"theme.optionalCheckbox\">\n                    <label>\n                        <input type=\"checkbox\" (change)=\"toggleOptional()\" [checked]=\"value === undefined\" [disabled]=\"readonly || schema.readonly\" />\n                        is undefined\n                    </label>\n                </div>\n                <button [class]=\"theme.button\" (click)=\"collapseOrExpand()\">\n                    <icon [icon]=\"icon\" [text]=\"collapsed ? icon.expand : icon.collapse\"></icon>\n                </button>\n                <button *ngIf=\"hasDeleteButtonFunction\" [class]=\"theme.button\" (click)=\"onDelete.emit()\">{{icon.delete}}</button>\n            </div>\n        </h3>\n        <p [class]=\"theme.help\">{{schema.description}}</p>\n        <div *ngIf=\"!collapsed && value !== undefined\" [class]=\"theme.rowContainer\">\n            <editor *ngFor=\"let property of properties; trackBy: trackByFunction\"\n                [schema]=\"property.value\"\n                [title]=\"property.value.title || property.name\"\n                [initialValue]=\"value[property.name]\"\n                (updateValue)=\"onChange(property.name, $event)\"\n                [theme]=\"theme\"\n                [icon]=\"icon\"\n                [locale]=\"locale\"\n                [required]=\"isRequired(property.name)\"\n                [readonly]=\"readonly || schema.readonly\"\n                [dragula]=\"dragula\"\n                [md]=\"md\"\n                [hljs]=\"hljs\"\n                [forceHttps]=\"forceHttps\">\n            </editor>\n        </div>\n    </div >\n    ",
         })
     ], ObjectEditorComponent);
     return ObjectEditorComponent;

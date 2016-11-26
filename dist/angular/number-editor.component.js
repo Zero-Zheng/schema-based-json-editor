@@ -5,18 +5,26 @@ var NumberEditorComponent = (function () {
     function NumberEditorComponent() {
         this.updateValue = new core_1.EventEmitter();
         this.onDelete = new core_1.EventEmitter();
-        this.buttonGroupStyle = common.buttonGroupStyle;
+        this.buttonGroupStyle = common.buttonGroupStyleString;
     }
     NumberEditorComponent.prototype.ngOnInit = function () {
         this.value = common.getDefaultValue(this.required, this.schema, this.initialValue);
         this.updateValue.emit({ value: this.value, isValid: !this.errorMessage });
     };
-    NumberEditorComponent.prototype.useInput = function () {
-        return this.value !== undefined && (this.schema.enum === undefined || this.readonly || this.schema.readonly);
-    };
-    NumberEditorComponent.prototype.useSelect = function () {
-        return this.value !== undefined && (this.schema.enum !== undefined && !this.readonly && !this.schema.readonly);
-    };
+    Object.defineProperty(NumberEditorComponent.prototype, "useInput", {
+        get: function () {
+            return this.value !== undefined && (this.schema.enum === undefined || this.readonly || this.schema.readonly);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(NumberEditorComponent.prototype, "useSelect", {
+        get: function () {
+            return this.value !== undefined && (this.schema.enum !== undefined && !this.readonly && !this.schema.readonly);
+        },
+        enumerable: true,
+        configurable: true
+    });
     NumberEditorComponent.prototype.onChange = function (e) {
         this.value = this.schema.type === "integer" ? common.toInteger(e.target.value) : common.toNumber(e.target.value);
         this.validate();
@@ -69,7 +77,8 @@ var NumberEditorComponent = (function () {
     NumberEditorComponent = __decorate([
         core_1.Component({
             selector: "number-editor",
-            template: "\n    <div [class]=\"errorMessage ? theme.errorRow : theme.row\">\n        <label *ngIf=\"title !== undefined && title !== null && title !== ''\" [class]=\"theme.label\">\n            {{title}}\n            <div [class]=\"theme.buttonGroup\" [style]=\"buttonGroupStyle\">\n                <button *ngIf=\"hasDeleteButton\" [class]=\"theme.button\" (click)=\"onDelete.emit()\">\n                    <icon [icon]=\"icon\" [text]=\"icon.delete\"></icon>\n                </button>\n            </div>\n        </label>\n        <div *ngIf=\"!required\" [class]=\"theme.optionalCheckbox\">\n            <label>\n                <input type=\"checkbox\" (change)=\"toggleOptional()\" [checked]=\"value === undefined\" />\n                is undefined\n            </label>\n        </div>\n        <input *ngIf=\"useInput()\"\n            [class]=\"theme.formControl\"\n            type=\"number\"\n            (change)=\"onChange($event)\"\n            (keyup)=\"onChange($event)\"\n            [defaultValue]=\"value\"\n            [readOnly]=\"readonly || schema.readonly\" />\n        <select *ngIf=\"useSelect()\"\n            [class]=\"theme.formControl\"\n            type=\"number\"\n            (change)=\"onChange\">\n            <option *ngFor=\"let e of schema.enum; let i = index; trackBy:trackByFunction\"\n                [value]=\"e\"\n                [selected]=\"value === e\">\n                {{e}}\n            </option>\n        </select>\n        <p [class]=\"theme.help\">{{schema.description}}</p>\n        <p *ngIf=\"errorMessage\" [class]=\"theme.help\">{{errorMessage}}</p>\n    </div>\n    ",
+            changeDetection: core_1.ChangeDetectionStrategy.OnPush,
+            template: "\n    <div [class]=\"errorMessage ? theme.errorRow : theme.row\">\n        <label *ngIf=\"title !== undefined && title !== null && title !== ''\" [class]=\"theme.label\">\n            {{title}}\n            <div [class]=\"theme.buttonGroup\" [style]=\"buttonGroupStyle\">\n                <div *ngIf=\"!required && (value === undefined || !schema.readonly)\" [class]=\"theme.optionalCheckbox\">\n                    <label>\n                        <input type=\"checkbox\" (change)=\"toggleOptional()\" [checked]=\"value === undefined\" [disabled]=\"readonly || schema.readonly\" />\n                        is undefined\n                    </label>\n                </div>\n                <button *ngIf=\"hasDeleteButton\" [class]=\"theme.button\" (click)=\"onDelete.emit()\">\n                    <icon [icon]=\"icon\" [text]=\"icon.delete\"></icon>\n                </button>\n            </div>\n        </label>\n        <input *ngIf=\"useInput\"\n            [class]=\"theme.formControl\"\n            type=\"number\"\n            (change)=\"onChange($event)\"\n            (keyup)=\"onChange($event)\"\n            [defaultValue]=\"value\"\n            [readOnly]=\"readonly || schema.readonly\" />\n        <select *ngIf=\"useSelect\"\n            [class]=\"theme.formControl\"\n            type=\"number\"\n            (change)=\"onChange\">\n            <option *ngFor=\"let e of schema.enum; let i = index; trackBy:trackByFunction\"\n                [value]=\"e\"\n                [selected]=\"value === e\">\n                {{e}}\n            </option>\n        </select>\n        <p [class]=\"theme.help\">{{schema.description}}</p>\n        <p *ngIf=\"errorMessage\" [class]=\"theme.help\">{{errorMessage}}</p>\n    </div>\n    ",
         })
     ], NumberEditorComponent);
     return NumberEditorComponent;

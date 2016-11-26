@@ -43,7 +43,11 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
                     icon={this.props.icon}
                     locale={this.props.locale}
                     required={required}
-                    readonly={this.props.readonly || this.props.schema.readonly} />);
+                    readonly={this.props.readonly || this.props.schema.readonly}
+                    dragula={this.props.dragula}
+                    md={this.props.md}
+                    hljs={this.props.hljs}
+                    forceHttps={this.props.forceHttps} />);
             }
             childrenElement = (
                 <div className={this.props.theme.rowContainer}>
@@ -60,11 +64,14 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
             );
         }
         let optionalCheckbox: JSX.Element | null = null;
-        if (!this.props.required) {
+        if (!this.props.required && (this.value === undefined || !this.props.schema.readonly)) {
             optionalCheckbox = (
                 <div className={this.props.theme.optionalCheckbox}>
                     <label>
-                        <input type="checkbox" onChange={this.toggleOptional} checked={this.value === undefined} />
+                        <input type="checkbox"
+                            onChange={this.toggleOptional}
+                            checked={this.value === undefined}
+                            disabled={this.props.readonly || this.props.schema.readonly} />
                         is undefined
                     </label>
                 </div>
@@ -75,6 +82,7 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
                 <h3>
                     {this.props.title || this.props.schema.title}
                     <div className={this.props.theme.buttonGroup} style={common.buttonGroupStyle}>
+                        {optionalCheckbox}
                         <button className={this.props.theme.button} onClick={this.collapseOrExpand}>
                             <Icon icon={this.props.icon} text={this.collapsed ? this.props.icon.expand : this.props.icon.collapse}></Icon>
                         </button>
@@ -82,7 +90,6 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
                     </div>
                 </h3>
                 <p className={this.props.theme.help}>{this.props.schema.description}</p>
-                {optionalCheckbox}
                 {childrenElement}
             </div >
         );

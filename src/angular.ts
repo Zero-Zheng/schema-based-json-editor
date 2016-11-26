@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from "@angular/core";
 import * as common from "./common";
+import { hljs, dragula } from "./lib";
 
 @Component({
     selector: "json-editor",
@@ -11,7 +12,11 @@ import * as common from "./common";
         [locale]="localeObject"
         [icon]="iconObject"
         [required]="true"
-        (updateValue)="updateValueFunction($event)">
+        (updateValue)="updateValueFunction($event)"
+        [dragula]="dragula"
+        [md]="md"
+        [hljs]="hljs"
+        [forceHttps]="forceHttps">
     </object-editor>
     <array-editor *ngIf="schema.type === 'array'"
         [schema]="schema"
@@ -20,7 +25,11 @@ import * as common from "./common";
         [locale]="localeObject"
         [icon]="iconObject"
         [required]="true"
-        (updateValue)="updateValueFunction($event)">
+        (updateValue)="updateValueFunction($event)"
+        [dragula]="dragula"
+        [md]="md"
+        [hljs]="hljs"
+        [forceHttps]="forceHttps">
     </array-editor>
     <number-editor *ngIf="schema.type === 'number' || schema.type === 'integer'"
         [schema]="schema"
@@ -56,7 +65,11 @@ import * as common from "./common";
         [locale]="localeObject"
         [icon]="iconObject"
         [required]="true"
-        (updateValue)="updateValueFunction($event)">
+        (updateValue)="updateValueFunction($event)"
+        [dragula]="dragula"
+        [md]="md"
+        [hljs]="hljs"
+        [forceHttps]="forceHttps">
     </string-editor>
     `,
 })
@@ -75,10 +88,20 @@ export class JSONEditorComponent {
     locale?: string;
     @Input()
     readonly?: boolean;
+    @Input()
+    dragula?: typeof dragula;
+    @Input()
+    markdownit?: any;
+    @Input()
+    hljs?: typeof hljs;
+    @Input()
+    forceHttps?: boolean;
 
     themeObject: common.Theme;
     localeObject: common.Locale;
     iconObject: common.Icon;
+    md: any;
+
     updateValueFunction = common.debounce((value: common.ValidityValue<common.ValueType | undefined>) => {
         this.updateValue.emit(value);
     }, 100);
@@ -86,6 +109,7 @@ export class JSONEditorComponent {
         this.themeObject = common.getTheme(this.theme);
         this.localeObject = common.getLocale(this.locale);
         this.iconObject = common.getIcon(this.icon, this.localeObject);
+        this.md = common.initializeMarkdown(this.markdownit, this.hljs, this.forceHttps);
     }
 }
 import { Cancelable } from "lodash";

@@ -1,26 +1,28 @@
-import { Component, Input, Output, EventEmitter } from "@angular/core";
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from "@angular/core";
 import * as common from "../common";
+import { hljs, dragula } from "../lib";
 
 @Component({
     selector: "object-editor",
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
     <div [class]="theme.row">
         <h3>
             {{title || schema.title}}
             <div [class]="theme.buttonGroup" [style]="buttonGroupStyle">
+                <div *ngIf="!required && (value === undefined || !schema.readonly)" [class]="theme.optionalCheckbox">
+                    <label>
+                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="readonly || schema.readonly" />
+                        is undefined
+                    </label>
+                </div>
                 <button [class]="theme.button" (click)="collapseOrExpand()">
                     <icon [icon]="icon" [text]="collapsed ? icon.expand : icon.collapse"></icon>
                 </button>
-                <button *ngIf="hasDeleteButtonFunction()" [class]="theme.button" (click)="onDelete.emit()">{{icon.delete}}</button>
+                <button *ngIf="hasDeleteButtonFunction" [class]="theme.button" (click)="onDelete.emit()">{{icon.delete}}</button>
             </div>
         </h3>
         <p [class]="theme.help">{{schema.description}}</p>
-        <div *ngIf="!required" [class]="theme.optionalCheckbox">
-            <label>
-                <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" />
-                is undefined
-            </label>
-        </div>
         <div *ngIf="!collapsed && value !== undefined" [class]="theme.rowContainer">
             <editor *ngFor="let property of properties; trackBy: trackByFunction"
                 [schema]="property.value"
@@ -31,7 +33,11 @@ import * as common from "../common";
                 [icon]="icon"
                 [locale]="locale"
                 [required]="isRequired(property.name)"
-                [readonly]="readonly || schema.readonly">
+                [readonly]="readonly || schema.readonly"
+                [dragula]="dragula"
+                [md]="md"
+                [hljs]="hljs"
+                [forceHttps]="forceHttps">
             </editor>
         </div>
     </div >
@@ -60,11 +66,19 @@ export class ObjectEditorComponent {
     required?: boolean;
     @Input()
     hasDeleteButton: boolean;
+    @Input()
+    dragula?: typeof dragula;
+    @Input()
+    md?: any;
+    @Input()
+    hljs?: typeof hljs;
+    @Input()
+    forceHttps?: boolean;
 
     collapsed = false;
     value?: { [name: string]: common.ValueType };
     properties: { name: string; value: common.ValueType }[] = [];
-    buttonGroupStyle = common.buttonGroupStyle;
+    buttonGroupStyle = common.buttonGroupStyleString;
     invalidProperties: string[] = [];
     ngOnInit() {
         this.value = common.getDefaultValue(this.required, this.schema, this.initialValue) as { [name: string]: common.ValueType };
@@ -100,7 +114,7 @@ export class ObjectEditorComponent {
         common.recordInvalidPropertiesOfObject(this.invalidProperties, isValid, property);
         this.updateValue.emit({ value: this.value, isValid: this.invalidProperties.length === 0 });
     }
-    hasDeleteButtonFunction() {
+    get hasDeleteButtonFunction() {
         return this.hasDeleteButton && !this.readonly && !this.schema.readonly;
     }
 }

@@ -1,19 +1,22 @@
 import * as common from "../dist/common";
 
 describe("getDefaultValue", () => {
-    it("should return initial value if initial value exists and valid", () => {
+    it("should return initial value", () => {
         expect(common.getDefaultValue(true, { type: "string" }, "abc")).toEqual("abc");
         expect(common.getDefaultValue(false, { type: "string" }, "abc")).toEqual("abc");
     });
 
-    it("should return undefined if no valid initial value and not required", () => {
+    it("should return default value", () => {
+        expect(common.getDefaultValue(true, { type: "string", default: "abc" }, "abc")).toEqual("abc");
+        expect(common.getDefaultValue(false, { type: "string", default: "abc" }, "abc")).toEqual("abc");
+    });
+
+    it("should return undefined", () => {
         expect(common.getDefaultValue(false, { type: "string" }, 123)).toEqual(undefined);
         expect(common.getDefaultValue(false, { type: "string" }, undefined)).toEqual(undefined);
     });
 
-    it("should return default value if no valid initial value and required", () => {
-        expect(common.getDefaultValue(true, { type: "string", default: "abc" }, undefined)).toEqual("abc");
-
+    it("should return non-undefined value", () => {
         expect(common.getDefaultValue(true, { type: "object", properties: {} }, undefined)).toEqual({});
         expect(common.getDefaultValue(true, { type: "array", items: { type: "string" } }, undefined)).toEqual([]);
         expect(common.getDefaultValue(true, { type: "number" }, undefined)).toEqual(0);
@@ -143,5 +146,13 @@ describe("getLocale", () => {
         expect(common.getLocale("zh-cn")).toEqual(common.locales["zh-cn"]);
         expect(common.getLocale("zh-CN")).toEqual(common.locales["zh-cn"]);
         expect(common.getLocale(common.defaultLocale)).toEqual(common.defaultLocale);
+    });
+});
+
+describe("replaceProtocal", () => {
+    it("should be true", () => {
+        expect(common.replaceProtocal("http://example/a.png")).toEqual("https://example/a.png");
+        expect(common.replaceProtocal("https://example/a.png")).toEqual("https://example/a.png");
+        expect(common.replaceProtocal("ws://example/a.png")).toEqual("ws://example/a.png");
     });
 });

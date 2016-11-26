@@ -19,10 +19,10 @@ var NullEditor = (function (_super) {
     };
     NullEditor.prototype.render = function () {
         var optionalCheckbox = null;
-        if (!this.props.required) {
+        if (!this.props.required && (this.value === undefined || !this.props.schema.readonly)) {
             optionalCheckbox = (React.createElement("div", {className: this.props.theme.optionalCheckbox}, 
                 React.createElement("label", null, 
-                    React.createElement("input", {type: "checkbox", onChange: this.toggleOptional, checked: this.value === undefined}), 
+                    React.createElement("input", {type: "checkbox", onChange: this.toggleOptional, checked: this.value === undefined, disabled: this.props.readonly || this.props.schema.readonly}), 
                     "is undefined")
             ));
         }
@@ -38,8 +38,9 @@ var NullEditor = (function (_super) {
         }
         return (React.createElement("div", {className: this.props.theme.row}, 
             titleView, 
-            React.createElement("div", {className: this.props.theme.buttonGroup, style: common.buttonGroupStyle}, deleteButton), 
-            optionalCheckbox, 
+            React.createElement("div", {className: this.props.theme.buttonGroup, style: common.buttonGroupStyle}, 
+                optionalCheckbox, 
+                deleteButton), 
             React.createElement("p", {className: this.props.theme.help}, this.props.schema.description)));
     };
     return NullEditor;
