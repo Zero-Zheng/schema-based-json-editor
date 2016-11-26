@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from "@angular/core";
 import * as common from "../common";
-import { hljs, dragula } from "../lib";
+import { hljs, dragula } from "../../typings/lib";
 
 @Component({
     selector: "object-editor",
@@ -19,7 +19,9 @@ import { hljs, dragula } from "../lib";
                 <button [class]="theme.button" (click)="collapseOrExpand()">
                     <icon [icon]="icon" [text]="collapsed ? icon.expand : icon.collapse"></icon>
                 </button>
-                <button *ngIf="hasDeleteButtonFunction" [class]="theme.button" (click)="onDelete.emit()">{{icon.delete}}</button>
+                <button *ngIf="hasDeleteButtonFunction" [class]="theme.button" (click)="onDelete.emit()">
+                    <icon [icon]="icon" [text]="icon.delete"></icon>
+                </button>
             </div>
         </h3>
         <p [class]="theme.help">{{schema.description}}</p>

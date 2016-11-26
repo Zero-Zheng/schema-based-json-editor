@@ -78,7 +78,7 @@ export const themes: { [name: string]: Theme } = {
         help: "help-block",
         errorRow: "row has-error",
         label: "control-label",
-        optionalCheckbox: "checkbox",
+        optionalCheckbox: "checkbox pull-left",
         buttonGroup: "btn-group",
         radiobox: "radio-inline",
     },
@@ -334,7 +334,7 @@ export function getDefaultValue(required: boolean | undefined, schema: Schema, i
 export const buttonGroupStyle: React.CSSProperties = { marginLeft: "10px" };
 export const buttonGroupStyleString = "margin-left: 10px";
 
-import { hljs as hljsLib, React, dragula } from "./lib";
+import { hljs as hljsLib, React, dragula } from "../typings/lib";
 
 export interface Props<TSchema extends CommonSchema, TValue> {
     schema: TSchema;
