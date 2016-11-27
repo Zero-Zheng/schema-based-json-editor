@@ -47,4 +47,7 @@ export declare class ObjectEditorComponent {
         [name: string]: common.ValueType;
     }>): void;
     readonly hasDeleteButtonFunction: boolean;
+    readonly isReadOnly: boolean | undefined;
+    readonly hasOptionalCheckbox: boolean;
+    readonly titleToShow: string;
 }

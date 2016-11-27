@@ -8,12 +8,12 @@ import { hljs, dragula } from "../../typings/lib";
     template: `
     <div [class]="theme.row">
         <h3>
-            {{title || schema.title}}
+            {{titleToShow}}
             <div [class]="theme.buttonGroup" [style]="buttonGroupStyle">
-                <div *ngIf="!required && (value === undefined || !schema.readonly)" [class]="theme.optionalCheckbox">
+                <div *ngIf="hasOptionalCheckbox" [class]="theme.optionalCheckbox">
                     <label>
-                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="readonly || schema.readonly" />
-                        is undefined
+                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="isReadOnly" />
+                        {{locale.info.notExists}}
                     </label>
                 </div>
                 <button [class]="theme.button" (click)="collapseOrExpand()">
@@ -35,7 +35,7 @@ import { hljs, dragula } from "../../typings/lib";
                 [icon]="icon"
                 [locale]="locale"
                 [required]="isRequired(property.name)"
-                [readonly]="readonly || schema.readonly"
+                [readonly]="isReadOnly"
                 [dragula]="dragula"
                 [md]="md"
                 [hljs]="hljs"
@@ -117,6 +117,18 @@ export class ObjectEditorComponent {
         this.updateValue.emit({ value: this.value, isValid: this.invalidProperties.length === 0 });
     }
     get hasDeleteButtonFunction() {
-        return this.hasDeleteButton && !this.readonly && !this.schema.readonly;
+        return this.hasDeleteButton && !this.isReadOnly;
+    }
+    get isReadOnly() {
+        return this.readonly || this.schema.readonly;
+    }
+    get hasOptionalCheckbox() {
+        return !this.required && (this.value === undefined || !this.isReadOnly);
+    }
+    get titleToShow() {
+        if (this.hasDeleteButton) {
+            return common.getTitle(common.findTitle(this.value), this.title, this.schema.title);
+        }
+        return common.getTitle(this.title, this.schema.title);
     }
 }

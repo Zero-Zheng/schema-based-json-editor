@@ -10,13 +10,13 @@ import { hljs, dragula } from "../../typings/lib";
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
     <div [class]="errorMessage ? theme.errorRow : theme.row">
-        <label *ngIf="title !== undefined && title !== null && title !== ''" [class]="theme.label">
-            {{title}}
+        <label *ngIf="titleToShow" [class]="theme.label">
+            {{titleToShow}}
             <div [class]="theme.buttonGroup" [style]="buttonGroupStyle">
-                <div *ngIf="!required && (value === undefined || !schema.readonly)" [class]="theme.optionalCheckbox">
+                <div *ngIf="hasOptionalCheckbox" [class]="theme.optionalCheckbox">
                     <label>
-                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="readonly || schema.readonly" />
-                        is undefined
+                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="isReadOnly" />
+                        {{locale.info.notExists}}
                     </label>
                 </div>
                 <button *ngIf="hasDeleteButton" [class]="theme.button" (click)="onDelete.emit()">
@@ -25,6 +25,9 @@ import { hljs, dragula } from "../../typings/lib";
                 <button *ngIf="canPreview" [class]="theme.button" (click)="collapseOrExpand()">
                     <icon [icon]="icon" [text]="collapsed ? icon.expand : icon.collapse"></icon>
                 </button>
+                <button *ngIf="hasLockButton" [class]="theme.button" (click)="toggleLocked()">
+                    <icon [icon]="icon" [text]="locked ? icon.unlock : icon.lock"></icon>
+                </button>
             </div>
         </label>
         <textarea *ngIf="useTextArea"
@@ -32,14 +35,14 @@ import { hljs, dragula } from "../../typings/lib";
             (change)="onChange($event)"
             (keyup)="onChange($event)"
             rows="5"
-            [readOnly]="readonly || schema.readonly">{{value}}</textarea>
+            [readOnly]="isReadOnly">{{value}}</textarea>
         <input *ngIf="useInput"
             [class]="theme.formControl"
             [type]="schema.format"
             (change)="onChange($event)"
             (keyup)="onChange($event)"
             [defaultValue]="value"
-            [readOnly]="readonly || schema.readonly" />
+            [readOnly]="isReadOnly" />
         <select *ngIf="useSelect"
             [class]="theme.formControl"
             (change)="onChange($event)">
@@ -49,12 +52,12 @@ import { hljs, dragula } from "../../typings/lib";
                 {{e}}
             </option>
         </select>
-        <img *ngIf="value && !collapsed && canPreviewImage"
+        <img *ngIf="willPreviewImage"
             class="schema-based-json-editor-image-preview"
             [src]="getImageUrl" />
-        <div *ngIf="value && !collapsed && canPreviewMarkdown" [innerHTML]="getMarkdown">
+        <div *ngIf="willPreviewMarkdown" [innerHTML]="getMarkdown">
         </div>
-        <pre *ngIf="value && !collapsed && canPreviewCode"><code [innerHTML]="getCode"></code></pre>
+        <pre *ngIf="willPreviewCode"><code [innerHTML]="getCode"></code></pre>
         <p [class]="theme.help">{{schema.description}}</p>
         <p *ngIf="errorMessage" [class]="theme.help">{{errorMessage}}</p>
     </div>
@@ -96,23 +99,30 @@ export class StringEditorComponent {
     errorMessage: string;
     buttonGroupStyle = common.buttonGroupStyleString;
     collapsed = false;
+    locked = true;
     ngOnInit() {
         this.value = common.getDefaultValue(this.required, this.schema, this.initialValue) as string;
         this.validate();
         this.updateValue.emit({ value: this.value, isValid: !this.errorMessage });
     }
     get useTextArea() {
+        const isUnlockedCodeOrMarkdown = (this.schema.format === "code" || this.schema.format === "markdown") && (!this.locked);
         return this.value !== undefined
-            && (this.schema.enum === undefined || this.readonly || this.schema.readonly)
-            && (this.schema.format === "textarea" || this.schema.format === "code" || this.schema.format === "markdown");
+            && (this.schema.enum === undefined || this.isReadOnly)
+            && (this.schema.format === "textarea" || isUnlockedCodeOrMarkdown);
     }
     get useInput() {
         return this.value !== undefined
-            && (this.schema.enum === undefined || this.readonly || this.schema.readonly)
+            && (this.schema.enum === undefined || this.isReadOnly)
             && (this.schema.format !== "textarea" && this.schema.format !== "code" && this.schema.format !== "markdown");
     }
     get useSelect() {
-        return this.value !== undefined && (this.schema.enum !== undefined && !this.readonly && !this.schema.readonly);
+        return this.value !== undefined && this.schema.enum !== undefined && !this.isReadOnly;
+    }
+    get hasLockButton() {
+        return this.value !== undefined
+            && (this.schema.enum === undefined || this.isReadOnly)
+            && (this.schema.format === "code" || this.schema.format === "markdown");
     }
     get canPreviewImage() {
         return common.isImageUrl(this.value);
@@ -135,6 +145,24 @@ export class StringEditorComponent {
     get getCode() {
         return this.hljs!.highlightAuto(this.value!).value;
     }
+    get isReadOnly() {
+        return this.readonly || this.schema.readonly;
+    }
+    get hasOptionalCheckbox() {
+        return !this.required && (this.value === undefined || !this.isReadOnly);
+    }
+    get willPreviewImage() {
+        return this.value && !this.collapsed && this.canPreviewImage;
+    }
+    get willPreviewMarkdown() {
+        return this.value && !this.collapsed && this.canPreviewMarkdown;
+    }
+    get willPreviewCode() {
+        return this.value && !this.collapsed && this.canPreviewCode;
+    }
+    get titleToShow() {
+        return common.getTitle(this.title, this.schema.title);
+    }
     onChange(e: { target: { value: string } }) {
         this.value = e.target.value;
         this.validate();
@@ -153,5 +181,8 @@ export class StringEditorComponent {
     }
     collapseOrExpand = () => {
         this.collapsed = !this.collapsed;
+    }
+    toggleLocked = () => {
+        this.locked = !this.locked;
     }
 }

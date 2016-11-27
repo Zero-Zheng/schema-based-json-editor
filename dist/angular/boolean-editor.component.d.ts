@@ -24,4 +24,7 @@ export declare class BooleanEditorComponent {
         };
     }): void;
     toggleOptional(): void;
+    readonly isReadOnly: boolean | undefined;
+    readonly hasOptionalCheckbox: boolean;
+    readonly titleToShow: string;
 }

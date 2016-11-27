@@ -10,6 +10,7 @@ export declare const stringEditor: {
         buttonGroupStyle: string;
         collapsed: boolean;
         imagePreviewStyle: string;
+        locked: boolean;
     };
     beforeMount(this: This): void;
     computed: {
@@ -17,12 +18,19 @@ export declare const stringEditor: {
         canPreviewMarkdown(this: This): boolean;
         canPreviewCode(this: This): boolean;
         canPreview(this: This): boolean | "" | undefined;
-        useTextArea(this: This): boolean | undefined;
-        useInput(this: This): boolean | undefined;
+        useTextArea(this: This): boolean;
+        useInput(this: This): boolean;
         useSelect(this: This): boolean;
+        hasLockButton(this: This): boolean;
         getImageUrl(this: This): string | undefined;
         getMarkdown(this: This): any;
         getCode(this: This): string;
+        isReadOnly(this: This): boolean | undefined;
+        hasOptionalCheckbox(this: This): boolean;
+        willPreviewImage(this: This): boolean | "" | undefined;
+        willPreviewMarkdown(this: This): boolean | "" | undefined;
+        willPreviewCode(this: This): boolean | "" | undefined;
+        titleToShow(this: This): string;
     };
     methods: {
         onChange(this: This, e: {
@@ -33,6 +41,7 @@ export declare const stringEditor: {
         validate(this: This): void;
         toggleOptional(this: This): void;
         collapseOrExpand(this: This): void;
+        toggleLocked(this: This): void;
     };
 };
 export declare type This = {
@@ -52,4 +61,7 @@ export declare type This = {
     canPreviewImage: boolean;
     canPreviewMarkdown: boolean;
     canPreviewCode: boolean;
+    isReadOnly: boolean;
+    locked: boolean;
+    title: string;
 };

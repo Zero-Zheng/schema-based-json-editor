@@ -49,6 +49,8 @@ exports.defaultLocale = {
         expand: "Expand",
         add: "Add",
         delete: "Delete",
+        lock: "lock",
+        unlock: "unlock",
     },
     error: {
         minLength: "Value must be at least {0} characters long.",
@@ -61,6 +63,9 @@ exports.defaultLocale = {
         minItems: "The length of the array must be >= {0}",
         uniqueItems: "The item in {0} and {1} must not be same.",
     },
+    info: {
+        notExists: "not exists",
+    },
 };
 exports.locales = {
     "zh-cn": {
@@ -69,6 +74,8 @@ exports.locales = {
             expand: "显示",
             add: "增加",
             delete: "删除",
+            lock: "锁定",
+            unlock: "解锁",
         },
         error: {
             minLength: "要求至少 {0} 字符。",
@@ -80,6 +87,9 @@ exports.locales = {
             smallerThan: "要求 < {0}。",
             minItems: "数组的长度要求 >= {0}。",
             uniqueItems: "{0} 和 {1} 的项不应该相同。",
+        },
+        info: {
+            notExists: "不存在",
         },
     },
 };
@@ -101,6 +111,8 @@ var icons = {
         expand: "glyphicon glyphicon-chevron-right",
         add: "glyphicon glyphicon-plus",
         delete: "glyphicon glyphicon-remove",
+        lock: "glyphicon glyphicon-lock",
+        unlock: "glyphicon glyphicon-edit",
     },
     "fontawesome4": {
         isText: false,
@@ -108,6 +120,8 @@ var icons = {
         expand: "fa fa-caret-square-o-right",
         add: "fa fa-plus",
         delete: "fa fa-times",
+        lock: "fa fa-lock",
+        unlock: "fa fa-unlock",
     },
 };
 function getIcon(name, locale) {
@@ -118,6 +132,8 @@ function getIcon(name, locale) {
             expand: locale.button.expand,
             add: locale.button.add,
             delete: locale.button.delete,
+            lock: locale.button.lock,
+            unlock: locale.button.unlock,
         };
     }
     if (typeof name === "string") {
@@ -127,6 +143,8 @@ function getIcon(name, locale) {
             expand: locale.button.expand,
             add: locale.button.add,
             delete: locale.button.delete,
+            lock: locale.button.lock,
+            unlock: locale.button.unlock,
         };
     }
     return name;
@@ -168,6 +186,9 @@ function getDefaultValue(required, schema, initialValue) {
                 }
         }
     }
+    if (!required) {
+        return undefined;
+    }
     if (schema.default !== undefined) {
         switch (schema.type) {
             case "object":
@@ -202,9 +223,6 @@ function getDefaultValue(required, schema, initialValue) {
                     return schema.default;
                 }
         }
-    }
-    if (!required) {
-        return undefined;
     }
     switch (schema.type) {
         case "object":
@@ -478,4 +496,37 @@ function initializeMarkdown(markdownit, hljs, forceHttps) {
     return md;
 }
 exports.initializeMarkdown = initializeMarkdown;
+function findTitle(value) {
+    if (value) {
+        for (var key in value) {
+            var title = value[key];
+            if (typeof title === "string" && title.length > 0) {
+                if (title.length > 23) {
+                    return title.substring(0, 20) + "...";
+                }
+                return title;
+            }
+            else {
+                continue;
+            }
+        }
+    }
+    return undefined;
+}
+exports.findTitle = findTitle;
+function getTitle() {
+    var titles = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        titles[_i - 0] = arguments[_i];
+    }
+    for (var _a = 0, titles_1 = titles; _a < titles_1.length; _a++) {
+        var title = titles_1[_a];
+        if (title === undefined || title === null) {
+            continue;
+        }
+        return String(title);
+    }
+    return "";
+}
+exports.getTitle = getTitle;
 //# sourceMappingURL=common.js.map

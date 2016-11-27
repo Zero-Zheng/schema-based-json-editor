@@ -7,13 +7,13 @@ import * as common from "../common";
 export const nullEditor = {
     template: `
     <div :class="theme.row">
-        <label v-if="title !== undefined && title !== null && title !== ''" :class="theme.label">
-            {{title}}
+        <label v-if="titleToShow" :class="theme.label">
+            {{titleToShow}}
             <div :class="theme.buttonGroup" :style="buttonGroupStyle">
-                <div v-if="!required && (value === undefined || !schema.readonly)" :class="theme.optionalCheckbox">
+                <div v-if="hasOptionalCheckbox" :class="theme.optionalCheckbox">
                     <label>
-                        <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" :disabled="readonly || schema.readonly" />
-                        is undefined
+                        <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" :disabled="isReadOnly" />
+                        {{locale.info.notExists}}
                     </label>
                 </div>
                 <button v-if="hasDeleteButton" :class="theme.button" @click="$emit('delete')">
@@ -33,6 +33,17 @@ export const nullEditor = {
             buttonGroupStyle: common.buttonGroupStyleString,
         };
     },
+    computed: {
+        isReadOnly(this: This) {
+            return this.readonly || this.schema.readonly;
+        },
+        hasOptionalCheckbox(this: This) {
+            return !this.required && (this.value === undefined || !this.isReadOnly);
+        },
+        titleToShow(this: This) {
+            return common.getTitle(this.title, this.schema.title);
+        },
+    },
     methods: {
         toggleOptional(this: This) {
             this.value = common.toggleOptional(this.value, this.schema, this.initialValue) as null | undefined;
@@ -47,4 +58,7 @@ export type This = {
     schema: common.NullSchema;
     initialValue: null;
     required: boolean;
+    readonly: boolean;
+    isReadOnly: boolean;
+    title: string;
 };

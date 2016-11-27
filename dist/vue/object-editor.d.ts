@@ -10,6 +10,12 @@ export declare const objectEditor: {
         buttonGroupStyle: string;
         invalidProperties: never[];
     };
+    computed: {
+        isReadOnly(this: This): boolean | undefined;
+        hasDeleteButtonFunction(this: This): boolean;
+        hasOptionalCheckbox(this: This): boolean;
+        titleToShow(this: This): string;
+    };
     methods: {
         isRequired(this: This, property: string): boolean | undefined;
         collapseOrExpand(this: This): void;
@@ -32,4 +38,8 @@ export declare type This = {
     initialValue: any;
     required: boolean;
     invalidProperties: string[];
+    readonly: boolean;
+    isReadOnly: boolean;
+    hasDeleteButton: boolean;
+    title: string;
 };

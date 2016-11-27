@@ -30,8 +30,13 @@ export declare class ArrayEditorComponent {
     errorMessage: string;
     buttonGroupStyleString: string;
     invalidIndexes: number[];
-    getValue(): common.ValueType[];
+    readonly getValue: common.ValueType[];
     ngOnInit(): void;
+    readonly isReadOnly: boolean | undefined;
+    readonly hasOptionalCheckbox: boolean;
+    readonly hasDeleteButtonFunction: boolean;
+    readonly hasAddButton: boolean;
+    readonly titleToShow: string;
     ngAfterViewInit(): void;
     ngOnDestroy(): void;
     trackByFunction: (index: number, value: common.ValueType) => number;
@@ -39,7 +44,6 @@ export declare class ArrayEditorComponent {
     toggleOptional: () => void;
     validate(): void;
     addItem(): void;
-    hasDeleteButtonFunction(): boolean;
     onDeleteFunction(i: number): void;
     onChange(i: number, {value, isValid}: common.ValidityValue<common.ValueType>): void;
 }

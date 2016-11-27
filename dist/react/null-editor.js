@@ -18,24 +18,15 @@ var NullEditor = (function (_super) {
         this.props.updateValue(this.value, true);
     };
     NullEditor.prototype.render = function () {
-        var optionalCheckbox = null;
-        if (!this.props.required && (this.value === undefined || !this.props.schema.readonly)) {
-            optionalCheckbox = (React.createElement("div", {className: this.props.theme.optionalCheckbox}, 
-                React.createElement("label", null, 
-                    React.createElement("input", {type: "checkbox", onChange: this.toggleOptional, checked: this.value === undefined, disabled: this.props.readonly || this.props.schema.readonly}), 
-                    "is undefined")
-            ));
-        }
-        var deleteButton = null;
-        if (this.props.onDelete) {
-            deleteButton = (React.createElement("button", {className: this.props.theme.button, onClick: this.props.onDelete}, 
-                React.createElement(icon_1.Icon, {icon: this.props.icon, text: this.props.icon.delete})
-            ));
-        }
-        var titleView = null;
-        if (this.props.title) {
-            titleView = (React.createElement("label", {className: this.props.theme.label}, this.props.title));
-        }
+        var optionalCheckbox = this.hasOptionalCheckbox ? (React.createElement("div", {className: this.props.theme.optionalCheckbox}, 
+            React.createElement("label", null, 
+                React.createElement("input", {type: "checkbox", onChange: this.toggleOptional, checked: this.value === undefined, disabled: this.isReadOnly}), 
+                this.props.locale.info.notExists)
+        )) : null;
+        var deleteButton = this.props.onDelete ? (React.createElement("button", {className: this.props.theme.button, onClick: this.props.onDelete}, 
+            React.createElement(icon_1.Icon, {icon: this.props.icon, text: this.props.icon.delete})
+        )) : null;
+        var titleView = this.props.title ? (React.createElement("label", {className: this.props.theme.label}, this.titleToShow)) : null;
         return (React.createElement("div", {className: this.props.theme.row}, 
             titleView, 
             React.createElement("div", {className: this.props.theme.buttonGroup, style: common.buttonGroupStyle}, 
@@ -43,6 +34,27 @@ var NullEditor = (function (_super) {
                 deleteButton), 
             React.createElement("p", {className: this.props.theme.help}, this.props.schema.description)));
     };
+    Object.defineProperty(NullEditor.prototype, "isReadOnly", {
+        get: function () {
+            return this.props.readonly || this.props.schema.readonly;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(NullEditor.prototype, "hasOptionalCheckbox", {
+        get: function () {
+            return !this.props.required && (this.value === undefined || !this.isReadOnly);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(NullEditor.prototype, "titleToShow", {
+        get: function () {
+            return common.getTitle(this.props.title, this.props.schema.title);
+        },
+        enumerable: true,
+        configurable: true
+    });
     return NullEditor;
 }(React.Component));
 exports.NullEditor = NullEditor;

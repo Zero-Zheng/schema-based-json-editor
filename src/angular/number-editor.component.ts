@@ -6,13 +6,13 @@ import * as common from "../common";
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
     <div [class]="errorMessage ? theme.errorRow : theme.row">
-        <label *ngIf="title !== undefined && title !== null && title !== ''" [class]="theme.label">
-            {{title}}
+        <label *ngIf="titleToShow" [class]="theme.label">
+            {{titleToShow}}
             <div [class]="theme.buttonGroup" [style]="buttonGroupStyle">
-                <div *ngIf="!required && (value === undefined || !schema.readonly)" [class]="theme.optionalCheckbox">
+                <div *ngIf="hasOptionalCheckbox" [class]="theme.optionalCheckbox">
                     <label>
-                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="readonly || schema.readonly" />
-                        is undefined
+                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="isReadOnly" />
+                        {{locale.info.notExists}}
                     </label>
                 </div>
                 <button *ngIf="hasDeleteButton" [class]="theme.button" (click)="onDelete.emit()">
@@ -26,7 +26,7 @@ import * as common from "../common";
             (change)="onChange($event)"
             (keyup)="onChange($event)"
             [defaultValue]="value"
-            [readOnly]="readonly || schema.readonly" />
+            [readOnly]="isReadOnly" />
         <select *ngIf="useSelect"
             [class]="theme.formControl"
             type="number"
@@ -74,10 +74,19 @@ export class NumberEditorComponent {
         this.updateValue.emit({ value: this.value, isValid: !this.errorMessage });
     }
     get useInput() {
-        return this.value !== undefined && (this.schema.enum === undefined || this.readonly || this.schema.readonly);
+        return this.value !== undefined && (this.schema.enum === undefined || this.isReadOnly);
     }
     get useSelect() {
-        return this.value !== undefined && (this.schema.enum !== undefined && !this.readonly && !this.schema.readonly);
+        return this.value !== undefined && (this.schema.enum !== undefined && !this.isReadOnly);
+    }
+    get isReadOnly() {
+        return this.readonly || this.schema.readonly;
+    }
+    get hasOptionalCheckbox() {
+        return !this.required && (this.value === undefined || !this.isReadOnly);
+    }
+    get titleToShow() {
+        return common.getTitle(this.title, this.schema.title);
     }
     onChange(e: { target: { value: string } }) {
         this.value = this.schema.type === "integer" ? common.toInteger(e.target.value) : common.toNumber(e.target.value);

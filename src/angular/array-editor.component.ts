@@ -7,28 +7,28 @@ import { hljs, dragula } from "../../typings/lib";
     template: `
     <div [class]="errorMessage ? theme.errorRow : theme.row">
         <h3>
-            {{title || schema.title}}
+            {{titleToShow}}
             <div [class]="theme.buttonGroup" [style]="buttonGroupStyleString">
-                <div *ngIf="!required && (value === undefined || !schema.readonly)" [class]="theme.optionalCheckbox">
+                <div *ngIf="hasOptionalCheckbox" [class]="theme.optionalCheckbox">
                     <label>
-                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="readonly || schema.readonly" />
-                        is undefined
+                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="isReadOnly" />
+                        {{locale.info.notExists}}
                     </label>
                 </div>
                 <button [class]="theme.button" (click)="collapseOrExpand()">
                     <icon [icon]="icon" [text]="collapsed ? icon.expand : icon.collapse"></icon>
                 </button>
-                <button *ngIf="!readonly && value !== undefined" [class]="theme.button" (click)="addItem()">
+                <button *ngIf="hasAddButton" [class]="theme.button" (click)="addItem()">
                     <icon [icon]="icon" [text]="icon.add"></icon>
                 </button>
-                <button *ngIf="hasDeleteButtonFunction()" [class]="theme.button" (click)="onDelete.emit()">
+                <button *ngIf="hasDeleteButtonFunction" [class]="theme.button" (click)="onDelete.emit()">
                     <icon [icon]="icon" [text]="icon.delete"></icon>
                 </button>
             </div>
         </h3>
         <p [class]="theme.help">{{schema.description}}</p>
         <div #drakContainer [class]="theme.rowContainer">
-            <div *ngFor="let item of getValue(); let i = index; trackBy:trackByFunction" [attr.data-index]="i" [class]="theme.rowContainer">
+            <div *ngFor="let item of getValue; let i = index; trackBy:trackByFunction" [attr.data-index]="i" [class]="theme.rowContainer">
                 <editor [schema]="schema.items"
                     [title]="i"
                     [initialValue]="value[i]"
@@ -37,7 +37,7 @@ import { hljs, dragula } from "../../typings/lib";
                     [icon]="icon"
                     [locale]="locale"
                     [required]="true"
-                    [readonly]="readonly || schema.readonly"
+                    [readonly]="isReadOnly"
                     (onDelete)="onDeleteFunction(i)"
                     [hasDeleteButton]="true"
                     [dragula]="dragula"
@@ -93,16 +93,30 @@ export class ArrayEditorComponent {
     errorMessage: string;
     buttonGroupStyleString = common.buttonGroupStyleString;
     invalidIndexes: number[] = [];
-    getValue() {
+    get getValue() {
         if (this.value !== undefined && !this.collapsed) {
             return this.value;
-
         }
         return [];
     }
     ngOnInit() {
         this.value = common.getDefaultValue(this.required, this.schema, this.initialValue) as common.ValueType[];
         this.updateValue.emit({ value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
+    }
+    get isReadOnly() {
+        return this.readonly || this.schema.readonly;
+    }
+    get hasOptionalCheckbox() {
+        return !this.required && (this.value === undefined || !this.isReadOnly);
+    }
+    get hasDeleteButtonFunction() {
+        return this.hasDeleteButton && !this.isReadOnly;
+    }
+    get hasAddButton() {
+        return !this.isReadOnly && this.value !== undefined;
+    }
+    get titleToShow() {
+        return common.getTitle(this.title, this.schema.title);
     }
     ngAfterViewInit() {
         if (this.drakContainer && this.dragula) {
@@ -139,9 +153,6 @@ export class ArrayEditorComponent {
     addItem() {
         this.value!.push(common.getDefaultValue(true, this.schema.items, undefined) !);
         this.updateValue.emit({ value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
-    }
-    hasDeleteButtonFunction() {
-        return this.hasDeleteButton && !this.readonly && !this.schema.readonly;
     }
     onDeleteFunction(i: number) {
         this.value!.splice(i, 1);

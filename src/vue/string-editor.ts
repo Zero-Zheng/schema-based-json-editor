@@ -8,13 +8,13 @@ import { hljs } from "../../typings/lib";
 export const stringEditor = {
     template: `
     <div :class="errorMessage ? theme.errorRow : theme.row">
-        <label v-if="title !== undefined && title !== null && title !== ''" :class="theme.label">
-            {{title}}
+        <label v-if="titleToShow" :class="theme.label">
+            {{titleToShow}}
             <div :class="theme.buttonGroup" :style="buttonGroupStyle">
-                <div v-if="!required && (value === undefined || !schema.readonly)" :class="theme.optionalCheckbox">
+                <div v-if="hasOptionalCheckbox" :class="theme.optionalCheckbox">
                     <label>
-                        <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" :disabled="readonly || schema.readonly" />
-                        is undefined
+                        <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" :disabled="isReadOnly" />
+                        {{locale.info.notExists}}
                     </label>
                 </div>
                 <button v-if="hasDeleteButton" :class="theme.button" @click="$emit('delete')">
@@ -23,6 +23,9 @@ export const stringEditor = {
                 <button v-if="canPreview" :class="theme.button" @click="collapseOrExpand()">
                     <icon :icon="icon" :text="collapsed ? icon.expand : icon.collapse"></icon>
                 </button>
+                <button v-if="hasLockButton" :class="theme.button" @click="toggleLocked()">
+                    <icon :icon="icon" :text="locked ? icon.unlock : icon.lock"></icon>
+                </button>
             </div>
         </label>
         <textarea v-if="useTextArea"
@@ -30,14 +33,14 @@ export const stringEditor = {
             @change="onChange($event)"
             @keyup="onChange($event)"
             rows="5"
-            :readOnly="readonly || schema.readonly">{{value}}</textarea>
+            :readOnly="isReadOnly">{{value}}</textarea>
         <input v-if="useInput"
             :class="theme.formControl"
             :type="schema.format"
             @change="onChange($event)"
             @keyup="onChange($event)"
             :value="value"
-            :readOnly="readonly || schema.readonly" />
+            :readOnly="isReadOnly" />
         <select v-if="useSelect"
             :class="theme.formControl"
             @change="onChange($event)">
@@ -48,11 +51,11 @@ export const stringEditor = {
                 {{e}}
             </option>
         </select>
-        <img v-if="value && !collapsed && canPreviewImage"
+        <img v-if="willPreviewImage"
             :style="imagePreviewStyle"
             :src="getImageUrl" />
-        <div v-if="value && !collapsed && canPreviewMarkdown" v-html="getMarkdown"></div>
-        <pre v-if="value && !collapsed && canPreviewCode"><code v-html="getCode"></code></pre>
+        <div v-if="willPreviewMarkdown" v-html="getMarkdown"></div>
+        <pre v-if="willPreviewCode"><code v-html="getCode"></code></pre>
         <p :class="theme.help">{{schema.description}}</p>
         <p v-if="errorMessage" :class="theme.help">{{errorMessage}}</p>
     </div>
@@ -67,6 +70,7 @@ export const stringEditor = {
             buttonGroupStyle: common.buttonGroupStyleString,
             collapsed: false,
             imagePreviewStyle: common.imagePreviewStyleString,
+            locked: true,
         };
     },
     beforeMount(this: This) {
@@ -86,17 +90,23 @@ export const stringEditor = {
             return this.value && (this.canPreviewImage || this.canPreviewMarkdown || this.canPreviewCode);
         },
         useTextArea(this: This) {
+            const isUnlockedCodeOrMarkdown = (this.schema.format === "code" || this.schema.format === "markdown") && (!this.locked);
             return this.value !== undefined
-                && (this.schema.enum === undefined || this.readonly || this.schema.readonly)
-                && (this.schema.format === "textarea" || this.schema.format === "code" || this.schema.format === "markdown");
+                && (this.schema.enum === undefined || this.isReadOnly)
+                && (this.schema.format === "textarea" || isUnlockedCodeOrMarkdown);
         },
         useInput(this: This) {
             return this.value !== undefined
-                && (this.schema.enum === undefined || this.readonly || this.schema.readonly)
+                && (this.schema.enum === undefined || this.isReadOnly)
                 && (this.schema.format !== "textarea" && this.schema.format !== "code" && this.schema.format !== "markdown");
         },
         useSelect(this: This) {
-            return this.value !== undefined && (this.schema.enum !== undefined && !this.readonly && !this.schema.readonly);
+            return this.value !== undefined && this.schema.enum !== undefined && !this.isReadOnly;
+        },
+        hasLockButton(this: This) {
+            return this.value !== undefined
+                && (this.schema.enum === undefined || this.isReadOnly)
+                && (this.schema.format === "code" || this.schema.format === "markdown");
         },
         getImageUrl(this: This) {
             return this.forceHttps ? common.replaceProtocal(this.value!) : this.value;
@@ -106,6 +116,24 @@ export const stringEditor = {
         },
         getCode(this: This) {
             return this.hljs!.highlightAuto(this.value!).value;
+        },
+        isReadOnly(this: This) {
+            return this.readonly || this.schema.readonly;
+        },
+        hasOptionalCheckbox(this: This) {
+            return !this.required && (this.value === undefined || !this.isReadOnly);
+        },
+        willPreviewImage(this: This) {
+            return this.value && !this.collapsed && this.canPreviewImage;
+        },
+        willPreviewMarkdown(this: This) {
+            return this.value && !this.collapsed && this.canPreviewMarkdown;
+        },
+        willPreviewCode(this: This) {
+            return this.value && !this.collapsed && this.canPreviewCode;
+        },
+        titleToShow(this: This) {
+            return common.getTitle(this.title, this.schema.title);
         },
     },
     methods: {
@@ -124,6 +152,9 @@ export const stringEditor = {
         },
         collapseOrExpand(this: This) {
             this.collapsed = !this.collapsed;
+        },
+        toggleLocked(this: This) {
+            this.locked = !this.locked;
         },
     },
 };
@@ -145,4 +176,7 @@ export type This = {
     canPreviewImage: boolean;
     canPreviewMarkdown: boolean;
     canPreviewCode: boolean;
+    isReadOnly: boolean;
+    locked: boolean;
+    title: string;
 };

@@ -7,13 +7,13 @@ import * as common from "../common";
 export const numberEditor = {
     template: `
     <div :class="errorMessage ? theme.errorRow : theme.row">
-        <label v-if="title !== undefined && title !== null && title !== ''" :class="theme.label">
-            {{title}}
+        <label v-if="titleToShow" :class="theme.label">
+            {{titleToShow}}
             <div :class="theme.buttonGroup" :style="buttonGroupStyle">
-                <div v-if="!required && (value === undefined || !schema.readonly)" :class="theme.optionalCheckbox">
+                <div v-if="hasOptionalCheckbox" :class="theme.optionalCheckbox">
                     <label>
-                        <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" :disabled="readonly || schema.readonly" />
-                        is undefined
+                        <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" :disabled="isReadOnly" />
+                        {{locale.info.notExists}}
                     </label>
                 </div>
                 <button v-if="hasDeleteButton" :class="theme.button" @click="$emit('delete')">
@@ -27,7 +27,7 @@ export const numberEditor = {
             @change="onChange($event)"
             @keyup="onChange($event)"
             :value="value"
-            :readOnly="readonly || schema.readonly" />
+            :readOnly="isReadOnly" />
         <select v-if="useSelect"
             :class="theme.formControl"
             type="number"
@@ -55,10 +55,19 @@ export const numberEditor = {
     },
     computed: {
         useInput(this: This) {
-            return this.value !== undefined && (this.schema.enum === undefined || this.readonly || this.schema.readonly);
+            return this.value !== undefined && (this.schema.enum === undefined || this.isReadOnly);
         },
         useSelect(this: This) {
-            return this.value !== undefined && (this.schema.enum !== undefined && !this.readonly && !this.schema.readonly);
+            return this.value !== undefined && (this.schema.enum !== undefined && !this.isReadOnly);
+        },
+        isReadOnly(this: This) {
+            return this.readonly || this.schema.readonly;
+        },
+        hasOptionalCheckbox(this: This) {
+            return !this.required && (this.value === undefined || !this.isReadOnly);
+        },
+        titleToShow(this: This) {
+            return common.getTitle(this.title, this.schema.title);
         },
     },
     methods: {
@@ -88,4 +97,6 @@ export type This = {
     validate: () => void;
     readonly: boolean;
     required: boolean;
+    isReadOnly: boolean;
+    title: string;
 };

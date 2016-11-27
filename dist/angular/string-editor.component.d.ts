@@ -26,10 +26,12 @@ export declare class StringEditorComponent {
     errorMessage: string;
     buttonGroupStyle: string;
     collapsed: boolean;
+    locked: boolean;
     ngOnInit(): void;
     readonly useTextArea: boolean | undefined;
     readonly useInput: boolean | undefined;
     readonly useSelect: boolean;
+    readonly hasLockButton: boolean | undefined;
     readonly canPreviewImage: boolean;
     readonly canPreviewMarkdown: boolean;
     readonly canPreviewCode: boolean | undefined;
@@ -37,6 +39,12 @@ export declare class StringEditorComponent {
     readonly getImageUrl: string | undefined;
     readonly getMarkdown: any;
     readonly getCode: string;
+    readonly isReadOnly: boolean | undefined;
+    readonly hasOptionalCheckbox: boolean;
+    readonly willPreviewImage: boolean | "" | undefined;
+    readonly willPreviewMarkdown: boolean | "" | undefined;
+    readonly willPreviewCode: boolean | "" | undefined;
+    readonly titleToShow: string;
     onChange(e: {
         target: {
             value: string;
@@ -48,4 +56,5 @@ export declare class StringEditorComponent {
         [name: string]: common.ValueType;
     }): number;
     collapseOrExpand: () => void;
+    toggleLocked: () => void;
 }

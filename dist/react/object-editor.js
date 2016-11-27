@@ -19,6 +19,12 @@ var ObjectEditor = (function (_super) {
             _this.setState({ value: _this.value });
             _this.props.updateValue(_this.value, _this.invalidProperties.length === 0);
         };
+        this.onChange = function (property, value, isValid) {
+            _this.value[property] = value;
+            _this.setState({ value: _this.value });
+            common.recordInvalidPropertiesOfObject(_this.invalidProperties, isValid, property);
+            _this.props.updateValue(_this.value, _this.invalidProperties.length === 0);
+        };
         this.value = common.getDefaultValue(this.props.required, this.props.schema, this.props.initialValue);
         if (!this.collapsed && this.value !== undefined) {
             var _loop_1 = function(property) {
@@ -37,43 +43,28 @@ var ObjectEditor = (function (_super) {
     };
     ObjectEditor.prototype.render = function () {
         var _this = this;
-        var childrenElement = null;
+        var childrenElement = [];
         if (!this.collapsed && this.value !== undefined) {
-            var propertyElements = [];
             var _loop_2 = function(property) {
-                var onChange = function (value, isValid) {
-                    _this.value[property] = value;
-                    _this.setState({ value: _this.value });
-                    common.recordInvalidPropertiesOfObject(_this.invalidProperties, isValid, property);
-                    _this.props.updateValue(_this.value, _this.invalidProperties.length === 0);
-                };
                 var schema = this_2.props.schema.properties[property];
-                var required = this_2.props.schema.required && this_2.props.schema.required.some(function (r) { return r === property; });
-                propertyElements.push(React.createElement(editor_1.Editor, {key: property, schema: schema, title: schema.title || property, initialValue: this_2.value[property], updateValue: onChange, theme: this_2.props.theme, icon: this_2.props.icon, locale: this_2.props.locale, required: required, readonly: this_2.props.readonly || this_2.props.schema.readonly, dragula: this_2.props.dragula, md: this_2.props.md, hljs: this_2.props.hljs, forceHttps: this_2.props.forceHttps}));
+                childrenElement.push(React.createElement(editor_1.Editor, {key: property, schema: schema, title: schema.title || property, initialValue: this_2.value[property], updateValue: function (value, isValid) { return _this.onChange(property, value, isValid); }, theme: this_2.props.theme, icon: this_2.props.icon, locale: this_2.props.locale, required: this_2.isRequired(property), readonly: this_2.isReadOnly, dragula: this_2.props.dragula, md: this_2.props.md, hljs: this_2.props.hljs, forceHttps: this_2.props.forceHttps}));
             };
             var this_2 = this;
             for (var property in this.props.schema.properties) {
                 _loop_2(property);
             }
-            childrenElement = (React.createElement("div", {className: this.props.theme.rowContainer}, propertyElements));
         }
-        var deleteButton = null;
-        if (this.props.onDelete && !this.props.readonly && !this.props.schema.readonly) {
-            deleteButton = (React.createElement("button", {className: this.props.theme.button, onClick: this.props.onDelete}, 
-                React.createElement(icon_1.Icon, {icon: this.props.icon, text: this.props.icon.delete})
-            ));
-        }
-        var optionalCheckbox = null;
-        if (!this.props.required && (this.value === undefined || !this.props.schema.readonly)) {
-            optionalCheckbox = (React.createElement("div", {className: this.props.theme.optionalCheckbox}, 
-                React.createElement("label", null, 
-                    React.createElement("input", {type: "checkbox", onChange: this.toggleOptional, checked: this.value === undefined, disabled: this.props.readonly || this.props.schema.readonly}), 
-                    "is undefined")
-            ));
-        }
+        var deleteButton = this.hasDeleteButtonFunction ? (React.createElement("button", {className: this.props.theme.button, onClick: this.props.onDelete}, 
+            React.createElement(icon_1.Icon, {icon: this.props.icon, text: this.props.icon.delete})
+        )) : null;
+        var optionalCheckbox = this.hasOptionalCheckbox ? (React.createElement("div", {className: this.props.theme.optionalCheckbox}, 
+            React.createElement("label", null, 
+                React.createElement("input", {type: "checkbox", onChange: this.toggleOptional, checked: this.value === undefined, disabled: this.isReadOnly}), 
+                this.props.locale.info.notExists)
+        )) : null;
         return (React.createElement("div", {className: this.props.theme.row}, 
             React.createElement("h3", null, 
-                this.props.title || this.props.schema.title, 
+                this.titleToShow, 
                 React.createElement("div", {className: this.props.theme.buttonGroup, style: common.buttonGroupStyle}, 
                     optionalCheckbox, 
                     React.createElement("button", {className: this.props.theme.button, onClick: this.collapseOrExpand}, 
@@ -81,8 +72,42 @@ var ObjectEditor = (function (_super) {
                     ), 
                     deleteButton)), 
             React.createElement("p", {className: this.props.theme.help}, this.props.schema.description), 
-            childrenElement));
+            React.createElement("div", {className: this.props.theme.rowContainer}, childrenElement)));
     };
+    ObjectEditor.prototype.isRequired = function (property) {
+        return this.props.schema.required && this.props.schema.required.some(function (r) { return r === property; });
+    };
+    Object.defineProperty(ObjectEditor.prototype, "hasDeleteButtonFunction", {
+        get: function () {
+            return this.props.onDelete && !this.isReadOnly;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(ObjectEditor.prototype, "isReadOnly", {
+        get: function () {
+            return this.props.readonly || this.props.schema.readonly;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(ObjectEditor.prototype, "hasOptionalCheckbox", {
+        get: function () {
+            return !this.props.required && (this.value === undefined || !this.isReadOnly);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(ObjectEditor.prototype, "titleToShow", {
+        get: function () {
+            if (this.props.onDelete) {
+                return common.getTitle(common.findTitle(this.value), this.props.title, this.props.schema.title);
+            }
+            return common.getTitle(this.props.title, this.props.schema.title);
+        },
+        enumerable: true,
+        configurable: true
+    });
     return ObjectEditor;
 }(React.Component));
 exports.ObjectEditor = ObjectEditor;

@@ -9,21 +9,21 @@ export const arrayEditor = {
     template: `
     <div :class="errorMessage ? theme.errorRow : theme.row">
         <h3>
-            {{title || schema.title}}
+            {{titleToShow}}
             <div :class="theme.buttonGroup" :style="buttonGroupStyleString">
-                <div v-if="!required && (value === undefined || !schema.readonly)" :class="theme.optionalCheckbox">
+                <div v-if="hasOptionalCheckbox" :class="theme.optionalCheckbox">
                     <label>
-                        <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" :disabled="readonly || schema.readonly" />
-                        is undefined
+                        <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" :disabled="isReadOnly" />
+                        {{locale.info.notExists}}
                     </label>
                 </div>
                 <button :class="theme.button" @click="collapseOrExpand()">
                     <icon :icon="icon" :text="collapsed ? icon.expand : icon.collapse"></icon>
                 </button>
-                <button v-if="!readonly && value !== undefined" :class="theme.button" @click="addItem()">
+                <button v-if="hasAddButton" :class="theme.button" @click="addItem()">
                     <icon :icon="icon" :text="icon.add"></icon>
                 </button>
-                <button v-if="hasDeleteButton && !readonly && !schema.readonly" :class="theme.button" @click="$emit('delete')">
+                <button v-if="hasDeleteButton && !isReadOnly" :class="theme.button" @click="$emit('delete')">
                     <icon :icon="icon" :text="icon.delete"></icon>
                 </button>
             </div>
@@ -39,7 +39,7 @@ export const arrayEditor = {
                     :icon="icon"
                     :locale="locale"
                     :required="true"
-                    :readonly="readonly || schema.readonly"
+                    :readonly="isReadOnly"
                     @delete="onDeleteFunction(i)"
                     :has-delete-button="true"
                     :dragula="dragula"
@@ -77,6 +77,18 @@ export const arrayEditor = {
                 return this.value;
             }
             return [];
+        },
+        isReadOnly(this: This) {
+            return this.readonly || this.schema.readonly;
+        },
+        hasOptionalCheckbox(this: This) {
+            return !this.required && (this.value === undefined || !this.isReadOnly);
+        },
+        hasAddButton(this: This) {
+            return !this.isReadOnly && this.value !== undefined;
+        },
+        titleToShow(this: This) {
+            return common.getTitle(this.title, this.schema.title);
         },
     },
     mounted(this: This) {
@@ -140,4 +152,7 @@ export type This = {
     validate: () => void;
     $el: HTMLElement;
     invalidIndexes: number[];
+    readonly: boolean;
+    isReadOnly: boolean;
+    title: string;
 };

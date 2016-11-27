@@ -8,6 +8,7 @@ var StringEditorComponent = (function () {
         this.onDelete = new core_1.EventEmitter();
         this.buttonGroupStyle = common.buttonGroupStyleString;
         this.collapsed = false;
+        this.locked = true;
         this.toggleOptional = function () {
             _this.value = common.toggleOptional(_this.value, _this.schema, _this.initialValue);
             _this.validate();
@@ -15,6 +16,9 @@ var StringEditorComponent = (function () {
         };
         this.collapseOrExpand = function () {
             _this.collapsed = !_this.collapsed;
+        };
+        this.toggleLocked = function () {
+            _this.locked = !_this.locked;
         };
     }
     StringEditorComponent.prototype.ngOnInit = function () {
@@ -24,9 +28,10 @@ var StringEditorComponent = (function () {
     };
     Object.defineProperty(StringEditorComponent.prototype, "useTextArea", {
         get: function () {
+            var isUnlockedCodeOrMarkdown = (this.schema.format === "code" || this.schema.format === "markdown") && (!this.locked);
             return this.value !== undefined
-                && (this.schema.enum === undefined || this.readonly || this.schema.readonly)
-                && (this.schema.format === "textarea" || this.schema.format === "code" || this.schema.format === "markdown");
+                && (this.schema.enum === undefined || this.isReadOnly)
+                && (this.schema.format === "textarea" || isUnlockedCodeOrMarkdown);
         },
         enumerable: true,
         configurable: true
@@ -34,7 +39,7 @@ var StringEditorComponent = (function () {
     Object.defineProperty(StringEditorComponent.prototype, "useInput", {
         get: function () {
             return this.value !== undefined
-                && (this.schema.enum === undefined || this.readonly || this.schema.readonly)
+                && (this.schema.enum === undefined || this.isReadOnly)
                 && (this.schema.format !== "textarea" && this.schema.format !== "code" && this.schema.format !== "markdown");
         },
         enumerable: true,
@@ -42,7 +47,16 @@ var StringEditorComponent = (function () {
     });
     Object.defineProperty(StringEditorComponent.prototype, "useSelect", {
         get: function () {
-            return this.value !== undefined && (this.schema.enum !== undefined && !this.readonly && !this.schema.readonly);
+            return this.value !== undefined && this.schema.enum !== undefined && !this.isReadOnly;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(StringEditorComponent.prototype, "hasLockButton", {
+        get: function () {
+            return this.value !== undefined
+                && (this.schema.enum === undefined || this.isReadOnly)
+                && (this.schema.format === "code" || this.schema.format === "markdown");
         },
         enumerable: true,
         configurable: true
@@ -92,6 +106,48 @@ var StringEditorComponent = (function () {
     Object.defineProperty(StringEditorComponent.prototype, "getCode", {
         get: function () {
             return this.hljs.highlightAuto(this.value).value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(StringEditorComponent.prototype, "isReadOnly", {
+        get: function () {
+            return this.readonly || this.schema.readonly;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(StringEditorComponent.prototype, "hasOptionalCheckbox", {
+        get: function () {
+            return !this.required && (this.value === undefined || !this.isReadOnly);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(StringEditorComponent.prototype, "willPreviewImage", {
+        get: function () {
+            return this.value && !this.collapsed && this.canPreviewImage;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(StringEditorComponent.prototype, "willPreviewMarkdown", {
+        get: function () {
+            return this.value && !this.collapsed && this.canPreviewMarkdown;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(StringEditorComponent.prototype, "willPreviewCode", {
+        get: function () {
+            return this.value && !this.collapsed && this.canPreviewCode;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(StringEditorComponent.prototype, "titleToShow", {
+        get: function () {
+            return common.getTitle(this.title, this.schema.title);
         },
         enumerable: true,
         configurable: true
@@ -159,7 +215,7 @@ var StringEditorComponent = (function () {
                 (".schema-based-json-editor-image-preview {" + common.imagePreviewStyleString + "}"),
             ],
             changeDetection: core_1.ChangeDetectionStrategy.OnPush,
-            template: "\n    <div [class]=\"errorMessage ? theme.errorRow : theme.row\">\n        <label *ngIf=\"title !== undefined && title !== null && title !== ''\" [class]=\"theme.label\">\n            {{title}}\n            <div [class]=\"theme.buttonGroup\" [style]=\"buttonGroupStyle\">\n                <div *ngIf=\"!required && (value === undefined || !schema.readonly)\" [class]=\"theme.optionalCheckbox\">\n                    <label>\n                        <input type=\"checkbox\" (change)=\"toggleOptional()\" [checked]=\"value === undefined\" [disabled]=\"readonly || schema.readonly\" />\n                        is undefined\n                    </label>\n                </div>\n                <button *ngIf=\"hasDeleteButton\" [class]=\"theme.button\" (click)=\"onDelete.emit()\">\n                    <icon [icon]=\"icon\" [text]=\"icon.delete\"></icon>\n                </button>\n                <button *ngIf=\"canPreview\" [class]=\"theme.button\" (click)=\"collapseOrExpand()\">\n                    <icon [icon]=\"icon\" [text]=\"collapsed ? icon.expand : icon.collapse\"></icon>\n                </button>\n            </div>\n        </label>\n        <textarea *ngIf=\"useTextArea\"\n            [class]=\"theme.formControl\"\n            (change)=\"onChange($event)\"\n            (keyup)=\"onChange($event)\"\n            rows=\"5\"\n            [readOnly]=\"readonly || schema.readonly\">{{value}}</textarea>\n        <input *ngIf=\"useInput\"\n            [class]=\"theme.formControl\"\n            [type]=\"schema.format\"\n            (change)=\"onChange($event)\"\n            (keyup)=\"onChange($event)\"\n            [defaultValue]=\"value\"\n            [readOnly]=\"readonly || schema.readonly\" />\n        <select *ngIf=\"useSelect\"\n            [class]=\"theme.formControl\"\n            (change)=\"onChange($event)\">\n            <option *ngFor=\"let e of schema.enum; let i = index; trackBy:trackByFunction\"\n                [value]=\"e\"\n                [selected]=\"value === e\">\n                {{e}}\n            </option>\n        </select>\n        <img *ngIf=\"value && !collapsed && canPreviewImage\"\n            class=\"schema-based-json-editor-image-preview\"\n            [src]=\"getImageUrl\" />\n        <div *ngIf=\"value && !collapsed && canPreviewMarkdown\" [innerHTML]=\"getMarkdown\">\n        </div>\n        <pre *ngIf=\"value && !collapsed && canPreviewCode\"><code [innerHTML]=\"getCode\"></code></pre>\n        <p [class]=\"theme.help\">{{schema.description}}</p>\n        <p *ngIf=\"errorMessage\" [class]=\"theme.help\">{{errorMessage}}</p>\n    </div>\n    ",
+            template: "\n    <div [class]=\"errorMessage ? theme.errorRow : theme.row\">\n        <label *ngIf=\"titleToShow\" [class]=\"theme.label\">\n            {{titleToShow}}\n            <div [class]=\"theme.buttonGroup\" [style]=\"buttonGroupStyle\">\n                <div *ngIf=\"hasOptionalCheckbox\" [class]=\"theme.optionalCheckbox\">\n                    <label>\n                        <input type=\"checkbox\" (change)=\"toggleOptional()\" [checked]=\"value === undefined\" [disabled]=\"isReadOnly\" />\n                        {{locale.info.notExists}}\n                    </label>\n                </div>\n                <button *ngIf=\"hasDeleteButton\" [class]=\"theme.button\" (click)=\"onDelete.emit()\">\n                    <icon [icon]=\"icon\" [text]=\"icon.delete\"></icon>\n                </button>\n                <button *ngIf=\"canPreview\" [class]=\"theme.button\" (click)=\"collapseOrExpand()\">\n                    <icon [icon]=\"icon\" [text]=\"collapsed ? icon.expand : icon.collapse\"></icon>\n                </button>\n                <button *ngIf=\"hasLockButton\" [class]=\"theme.button\" (click)=\"toggleLocked()\">\n                    <icon [icon]=\"icon\" [text]=\"locked ? icon.unlock : icon.lock\"></icon>\n                </button>\n            </div>\n        </label>\n        <textarea *ngIf=\"useTextArea\"\n            [class]=\"theme.formControl\"\n            (change)=\"onChange($event)\"\n            (keyup)=\"onChange($event)\"\n            rows=\"5\"\n            [readOnly]=\"isReadOnly\">{{value}}</textarea>\n        <input *ngIf=\"useInput\"\n            [class]=\"theme.formControl\"\n            [type]=\"schema.format\"\n            (change)=\"onChange($event)\"\n            (keyup)=\"onChange($event)\"\n            [defaultValue]=\"value\"\n            [readOnly]=\"isReadOnly\" />\n        <select *ngIf=\"useSelect\"\n            [class]=\"theme.formControl\"\n            (change)=\"onChange($event)\">\n            <option *ngFor=\"let e of schema.enum; let i = index; trackBy:trackByFunction\"\n                [value]=\"e\"\n                [selected]=\"value === e\">\n                {{e}}\n            </option>\n        </select>\n        <img *ngIf=\"willPreviewImage\"\n            class=\"schema-based-json-editor-image-preview\"\n            [src]=\"getImageUrl\" />\n        <div *ngIf=\"willPreviewMarkdown\" [innerHTML]=\"getMarkdown\">\n        </div>\n        <pre *ngIf=\"willPreviewCode\"><code [innerHTML]=\"getCode\"></code></pre>\n        <p [class]=\"theme.help\">{{schema.description}}</p>\n        <p *ngIf=\"errorMessage\" [class]=\"theme.help\">{{errorMessage}}</p>\n    </div>\n    ",
         })
     ], StringEditorComponent);
     return StringEditorComponent;

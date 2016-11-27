@@ -5,13 +5,13 @@ import * as common from "../common";
     selector: "boolean-editor",
     template: `
     <div [class]="theme.row">
-        <label *ngIf="title !== undefined && title !== null && title !== ''" [class]="theme.label">
-            {{title}}
+        <label *ngIf="titleToShow" [class]="theme.label">
+            {{titleToShow}}
             <div [class]="theme.buttonGroup" [style]="buttonGroupStyle">
-                <div *ngIf="!required && (value === undefined || !schema.readonly)" [class]="theme.optionalCheckbox">
+                <div *ngIf="hasOptionalCheckbox" [class]="theme.optionalCheckbox">
                     <label>
-                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="readonly || schema.readonly" />
-                        is undefined
+                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="isReadOnly" />
+                        {{locale.info.notExists}}
                     </label>
                 </div>
                 <button *ngIf="hasDeleteButton" [class]="theme.button" (click)="onDelete.emit()">
@@ -25,7 +25,7 @@ import * as common from "../common";
                     <input type="radio"
                         (change)="onChange($event)"
                         [checked]="value"
-                        [disabled]="readonly || schema.readonly" />
+                        [disabled]="isReadOnly" />
                     true
                 </label>
             </div>
@@ -34,7 +34,7 @@ import * as common from "../common";
                     <input type="radio"
                         (change)="onChange($event)"
                         [checked]="!value"
-                        [disabled]="readonly || schema.readonly" />
+                        [disabled]="isReadOnly" />
                     false
                 </label>
             </div>
@@ -80,5 +80,14 @@ export class BooleanEditorComponent {
     toggleOptional() {
         this.value = common.toggleOptional(this.value, this.schema, this.initialValue) as boolean | undefined;
         this.updateValue.emit({ value: this.value, isValid: true });
+    }
+    get isReadOnly() {
+        return this.readonly || this.schema.readonly;
+    }
+    get hasOptionalCheckbox() {
+        return !this.required && (this.value === undefined || !this.isReadOnly);
+    }
+    get titleToShow() {
+        return common.getTitle(this.title, this.schema.title);
     }
 }

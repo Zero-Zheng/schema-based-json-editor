@@ -19,4 +19,7 @@ export declare class NullEditorComponent {
     buttonGroupStyle: string;
     ngOnInit(): void;
     toggleOptional(): void;
+    readonly isReadOnly: boolean | undefined;
+    readonly hasOptionalCheckbox: boolean;
+    readonly titleToShow: string;
 }

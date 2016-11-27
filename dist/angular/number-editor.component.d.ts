@@ -21,6 +21,9 @@ export declare class NumberEditorComponent {
     ngOnInit(): void;
     readonly useInput: boolean | undefined;
     readonly useSelect: boolean;
+    readonly isReadOnly: boolean | undefined;
+    readonly hasOptionalCheckbox: boolean;
+    readonly titleToShow: string;
     onChange(e: {
         target: {
             value: string;
