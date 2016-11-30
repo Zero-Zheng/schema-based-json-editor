@@ -1,12 +1,11 @@
 import { Component, Input, Output, EventEmitter } from "@angular/core";
 import * as common from "./common";
-import { hljs, dragula } from "../typings/lib";
+import { hljs, dragula, MarkdownIt } from "../typings/lib";
 
 @Component({
     selector: "json-editor",
     template: `
-    <object-editor *ngIf="schema.type === 'object'"
-        [schema]="schema"
+    <editor [schema]="schema"
         [initialValue]="initialValue"
         [theme]="themeObject"
         [locale]="localeObject"
@@ -18,65 +17,7 @@ import { hljs, dragula } from "../typings/lib";
         [md]="md"
         [hljs]="hljs"
         [forceHttps]="forceHttps">
-    </object-editor>
-    <array-editor *ngIf="schema.type === 'array'"
-        [schema]="schema"
-        [initialValue]="initialValue"
-        [theme]="themeObject"
-        [locale]="localeObject"
-        [icon]="iconObject"
-        [readonly]="readonly"
-        [required]="true"
-        (updateValue)="updateValueFunction($event)"
-        [dragula]="dragula"
-        [md]="md"
-        [hljs]="hljs"
-        [forceHttps]="forceHttps">
-    </array-editor>
-    <number-editor *ngIf="schema.type === 'number' || schema.type === 'integer'"
-        [schema]="schema"
-        [initialValue]="initialValue"
-        [theme]="themeObject"
-        [locale]="localeObject"
-        [icon]="iconObject"
-        [readonly]="readonly"
-        [required]="true"
-        (updateValue)="updateValueFunction($event)">
-    </number-editor>
-    <boolean-editor *ngIf="schema.type === 'boolean'"
-        [schema]="schema"
-        [initialValue]="initialValue"
-        [theme]="themeObject"
-        [locale]="localeObject"
-        [icon]="iconObject"
-        [readonly]="readonly"
-        [required]="true"
-        (updateValue)="updateValueFunction($event)">
-    </boolean-editor>
-    <null-editor *ngIf="schema.type === 'null'"
-        [schema]="schema"
-        [initialValue]="initialValue"
-        [theme]="themeObject"
-        [locale]="localeObject"
-        [icon]="iconObject"
-        [readonly]="readonly"
-        [required]="true"
-        (updateValue)="updateValueFunction($event)">
-    </null-editor>
-    <string-editor *ngIf="schema.type === 'string'"
-        [schema]="schema"
-        [initialValue]="initialValue"
-        [theme]="themeObject"
-        [locale]="localeObject"
-        [icon]="iconObject"
-        [readonly]="readonly"
-        [required]="true"
-        (updateValue)="updateValueFunction($event)"
-        [dragula]="dragula"
-        [md]="md"
-        [hljs]="hljs"
-        [forceHttps]="forceHttps">
-    </string-editor>
+    </editor>
     `,
 })
 export class JSONEditorComponent {
@@ -106,7 +47,7 @@ export class JSONEditorComponent {
     themeObject: common.Theme;
     localeObject: common.Locale;
     iconObject: common.Icon;
-    md: any;
+    md?: MarkdownIt.MarkdownIt;
 
     updateValueFunction = common.debounce((value: common.ValidityValue<common.ValueType | undefined>) => {
         this.updateValue.emit(value);
@@ -144,3 +85,9 @@ export { StringEditorComponent };
 
 import { IconComponent } from "./angular/icon.component";
 export { IconComponent };
+
+import { OptionalComponent } from "./angular/optional.component";
+export { OptionalComponent };
+
+import { DescriptionComponent } from "./angular/description.component";
+export { DescriptionComponent };

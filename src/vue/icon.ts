@@ -1,11 +1,15 @@
-/* tslint:disable:only-arrow-functions */
-/* tslint:disable:no-unused-new */
-/* tslint:disable:object-literal-shorthand */
+import * as Vue from "vue";
+import Component from "vue-class-component";
 
-export const icon = {
+@Component({
     template: `
-    <span v-if="icon.isText">{{text}}</span>
-    <i v-else :class="text"></i>
+    <button :class="theme.button" @click="$emit('click')">
+        <span v-if="icon.isText">{{text}}</span>
+        <i v-else :class="text"></i>
+    </button>
     `,
-    props: ["icon", "text"],
-};
+    props: ["icon", "text", "theme"],
+})
+export class Icon extends Vue {
+
+}

@@ -3,6 +3,8 @@ import * as ReactDOM from "react-dom";
 import * as common from "../common";
 import { Editor } from "./editor";
 import { Icon } from "./icon";
+import { Optional } from "./optional";
+import { Description } from "./description";
 import { dragula } from "../../typings/lib";
 
 export class ArrayEditor extends React.Component<common.Props<common.ArraySchema, common.ValueType[]>, { value?: common.ValueType[]; collapsed?: boolean; renderSwitch?: number }> {
@@ -58,50 +60,39 @@ export class ArrayEditor extends React.Component<common.Props<common.ArraySchema
             </div>
         ));
 
-        const deleteButton = this.hasDeleteButton ? (
-            <button className={this.props.theme.button} onClick={this.props.onDelete}>
-                <Icon icon={this.props.icon} text={this.props.icon.delete}></Icon>
-            </button>
-        ) : null;
-
-        const addButton = this.hasAddButton ? (
-            <button className={this.props.theme.button} onClick={this.addItem}>
-                <Icon icon={this.props.icon} text={this.props.icon.add}></Icon>
-            </button>
-        ) : null;
-
-        const optionalCheckbox = this.hasOptionalCheckbox ? (
-            <div className={this.props.theme.optionalCheckbox}>
-                <label>
-                    <input type="checkbox"
-                        onChange={this.toggleOptional}
-                        checked={this.value === undefined}
-                        disabled={this.isReadOnly} />
-                    {this.props.locale.info.notExists}
-                </label>
-            </div>
-        ) : null;
-
-        const errorDescription = this.errorMessage ? <p className={this.props.theme.help}>{this.errorMessage}</p> : null;
-
         return (
             <div className={this.errorMessage ? this.props.theme.errorRow : this.props.theme.row}>
                 <h3>
                     {this.titleToShow}
                     <div className={this.props.theme.buttonGroup} style={common.buttonGroupStyle}>
-                        {optionalCheckbox}
-                        <button className={this.props.theme.button} onClick={this.collapseOrExpand}>
-                            <Icon icon={this.props.icon} text={this.collapsed ? this.props.icon.expand : this.props.icon.collapse}></Icon>
-                        </button>
-                        {addButton}
-                        {deleteButton}
+                        <Optional required={this.props.required}
+                            value={this.value}
+                            isReadOnly={this.isReadOnly}
+                            theme={this.props.theme}
+                            locale={this.props.locale}
+                            toggleOptional={this.toggleOptional} />
+                        <Icon valid={true}
+                            onClick={this.collapseOrExpand}
+                            text={this.collapsed ? this.props.icon.expand : this.props.icon.collapse}
+                            theme={this.props.theme}
+                            icon={this.props.icon} />
+                        <Icon valid={this.hasAddButton}
+                            onClick={this.addItem}
+                            text={this.props.icon.add}
+                            theme={this.props.theme}
+                            icon={this.props.icon} />
+                        <Icon valid={this.hasDeleteButtonFunction}
+                            onClick={this.props.onDelete!}
+                            text={this.props.icon.delete}
+                            theme={this.props.theme}
+                            icon={this.props.icon} />
                     </div>
                 </h3>
-                <p className={this.props.theme.help}>{this.props.schema.description}</p>
+                <Description theme={this.props.theme} message={this.props.schema.description} notEmpty={true} />
                 <div className={this.props.theme.rowContainer}>
                     {childrenElement}
                 </div>
-                {errorDescription}
+                <Description theme={this.props.theme} message={this.errorMessage} />
             </div>
         );
     }
@@ -140,10 +131,7 @@ export class ArrayEditor extends React.Component<common.Props<common.ArraySchema
     get isReadOnly() {
         return this.props.readonly || this.props.schema.readonly;
     }
-    get hasOptionalCheckbox() {
-        return !this.props.required && (this.value === undefined || !this.isReadOnly);
-    }
-    get hasDeleteButton() {
+    get hasDeleteButtonFunction() {
         return this.props.onDelete && !this.isReadOnly;
     }
     get hasAddButton() {

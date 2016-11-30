@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from "@angular/core";
 import * as common from "../common";
-import { hljs, dragula } from "../../typings/lib";
+import { hljs, dragula, MarkdownIt } from "../../typings/lib";
 
 @Component({
     selector: "string-editor",
@@ -10,31 +10,41 @@ import { hljs, dragula } from "../../typings/lib";
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
     <div [class]="errorMessage ? theme.errorRow : theme.row">
-        <label *ngIf="titleToShow" [class]="theme.label">
+        <label [class]="theme.label">
             {{titleToShow}}
             <div [class]="theme.buttonGroup" [style]="buttonGroupStyle">
-                <div *ngIf="hasOptionalCheckbox" [class]="theme.optionalCheckbox">
-                    <label>
-                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="isReadOnly" />
-                        {{locale.info.notExists}}
-                    </label>
-                </div>
-                <button *ngIf="hasDeleteButton" [class]="theme.button" (click)="onDelete.emit()">
-                    <icon [icon]="icon" [text]="icon.delete"></icon>
-                </button>
-                <button *ngIf="canPreview" [class]="theme.button" (click)="collapseOrExpand()">
-                    <icon [icon]="icon" [text]="collapsed ? icon.expand : icon.collapse"></icon>
-                </button>
-                <button *ngIf="hasLockButton" [class]="theme.button" (click)="toggleLocked()">
-                    <icon [icon]="icon" [text]="locked ? icon.unlock : icon.lock"></icon>
-                </button>
+                <optional [required]="required"
+                    [value]="value"
+                    [isReadOnly]="isReadOnly"
+                    [theme]="theme"
+                    [locale]="locale"
+                    (toggleOptional)="toggleOptional()">
+                </optional>
+                <icon *ngIf="hasDeleteButtonFunction"
+                    (onClick)="onDelete.emit()"
+                    [text]="icon.delete"
+                    [theme]="theme"
+                    [icon]="icon">
+                </icon>
+                <icon *ngIf="canPreview"
+                    (onClick)="collapseOrExpand()"
+                    [text]="collapsed ? icon.expand : icon.collapse"
+                    [theme]="theme"
+                    [icon]="icon">
+                </icon>
+                <icon *ngIf="hasLockButton"
+                    (onClick)="toggleLocked()"
+                    [text]="locked ? icon.unlock : icon.lock"
+                    [theme]="theme"
+                    [icon]="icon">
+                </icon>
             </div>
         </label>
         <textarea *ngIf="useTextArea"
             [class]="theme.formControl"
             (change)="onChange($event)"
             (keyup)="onChange($event)"
-            rows="5"
+            rows="10"
             [readOnly]="isReadOnly">{{value}}</textarea>
         <input *ngIf="useInput"
             [class]="theme.formControl"
@@ -58,8 +68,8 @@ import { hljs, dragula } from "../../typings/lib";
         <div *ngIf="willPreviewMarkdown" [innerHTML]="getMarkdown">
         </div>
         <pre *ngIf="willPreviewCode"><code [innerHTML]="getCode"></code></pre>
-        <p [class]="theme.help">{{schema.description}}</p>
-        <p *ngIf="errorMessage" [class]="theme.help">{{errorMessage}}</p>
+        <description [theme]="theme" [message]="schema.description"></description>
+        <description [theme]="theme" [message]="errorMessage"></description>
     </div>
     `,
 })
@@ -89,7 +99,7 @@ export class StringEditorComponent {
     @Input()
     dragula?: typeof dragula;
     @Input()
-    md?: any;
+    md?: MarkdownIt.MarkdownIt;
     @Input()
     hljs?: typeof hljs;
     @Input()
@@ -134,13 +144,13 @@ export class StringEditorComponent {
         return this.hljs && this.schema.format === "code";
     }
     get canPreview() {
-        return this.value && (this.canPreviewImage || this.canPreviewMarkdown || this.canPreviewCode);
+        return (!!this.value) && (this.canPreviewImage || this.canPreviewMarkdown || this.canPreviewCode);
     }
     get getImageUrl() {
         return this.forceHttps ? common.replaceProtocal(this.value!) : this.value;
     }
     get getMarkdown() {
-        return this.md.render(this.value);
+        return this.md!.render(this.value!);
     }
     get getCode() {
         return this.hljs!.highlightAuto(this.value!).value;
@@ -148,8 +158,8 @@ export class StringEditorComponent {
     get isReadOnly() {
         return this.readonly || this.schema.readonly;
     }
-    get hasOptionalCheckbox() {
-        return !this.required && (this.value === undefined || !this.isReadOnly);
+    get hasDeleteButtonFunction() {
+        return this.hasDeleteButton && !this.isReadOnly;
     }
     get willPreviewImage() {
         return this.value && !this.collapsed && this.canPreviewImage;

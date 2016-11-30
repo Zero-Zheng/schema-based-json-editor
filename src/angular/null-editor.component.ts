@@ -5,21 +5,25 @@ import * as common from "../common";
     selector: "null-editor",
     template: `
     <div [class]="theme.row">
-        <label *ngIf="titleToShow" [class]="theme.label">
+        <label [class]="theme.label">
             {{titleToShow}}
             <div [class]="theme.buttonGroup" [style]="buttonGroupStyle">
-                <div *ngIf="hasOptionalCheckbox" [class]="theme.optionalCheckbox">
-                    <label>
-                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="isReadOnly" />
-                        {{locale.info.notExists}}
-                    </label>
-                </div>
-                <button *ngIf="hasDeleteButton" [class]="theme.button" (click)="onDelete.emit()">
-                    <icon [icon]="icon" [text]="icon.delete"></icon>
-                </button>
+                <optional [required]="required"
+                    [value]="value"
+                    [isReadOnly]="isReadOnly"
+                    [theme]="theme"
+                    [locale]="locale"
+                    (toggleOptional)="toggleOptional()">
+                </optional>
+                <icon *ngIf="hasDeleteButtonFunction"
+                    (onClick)="onDelete.emit()"
+                    [text]="icon.delete"
+                    [theme]="theme"
+                    [icon]="icon">
+                </icon>
             </div>
         </label>
-        <p [class]="theme.help">{{schema.description}}</p>
+        <description [theme]="theme" [message]="schema.description"></description>
     </div>
     `,
 })
@@ -60,8 +64,8 @@ export class NullEditorComponent {
     get isReadOnly() {
         return this.readonly || this.schema.readonly;
     }
-    get hasOptionalCheckbox() {
-        return !this.required && (this.value === undefined || !this.isReadOnly);
+    get hasDeleteButtonFunction() {
+        return this.hasDeleteButton && !this.isReadOnly;
     }
     get titleToShow() {
         return common.getTitle(this.title, this.schema.title);

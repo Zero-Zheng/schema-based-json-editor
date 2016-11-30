@@ -1,6 +1,8 @@
 import * as React from "react";
 import * as common from "../common";
 import { Icon } from "./icon";
+import {Optional} from "./optional";
+import { Description } from "./description";
 
 export class NullEditor extends React.Component<common.Props<common.NullSchema, null>, {}> {
     value?: null;
@@ -12,38 +14,25 @@ export class NullEditor extends React.Component<common.Props<common.NullSchema, 
         this.props.updateValue(this.value, true);
     }
     render() {
-        const optionalCheckbox = this.hasOptionalCheckbox ? (
-            <div className={this.props.theme.optionalCheckbox}>
-                <label>
-                    <input type="checkbox"
-                        onChange={this.toggleOptional}
-                        checked={this.value === undefined}
-                        disabled={this.isReadOnly} />
-                    {this.props.locale.info.notExists}
-                </label>
-            </div>
-        ) : null;
-
-        const deleteButton = this.props.onDelete ? (
-            <button className={this.props.theme.button} onClick={this.props.onDelete}>
-                <Icon icon={this.props.icon} text={this.props.icon.delete}></Icon>
-            </button>
-        ) : null;
-
-        const titleView = this.props.title ? (
-            <label className={this.props.theme.label}>
-                {this.titleToShow}
-            </label>
-        ) : null;
-
         return (
             <div className={this.props.theme.row}>
-                {titleView}
-                <div className={this.props.theme.buttonGroup} style={common.buttonGroupStyle}>
-                    {optionalCheckbox}
-                    {deleteButton}
-                </div>
-                <p className={this.props.theme.help}>{this.props.schema.description}</p>
+                <label className={this.props.theme.label}>
+                    {this.titleToShow}
+                    <div className={this.props.theme.buttonGroup} style={common.buttonGroupStyle}>
+                        <Optional required={this.props.required}
+                            value={this.value}
+                            isReadOnly={this.isReadOnly}
+                            theme={this.props.theme}
+                            locale={this.props.locale}
+                            toggleOptional={this.toggleOptional} />
+                        <Icon valid={this.hasDeleteButtonFunction}
+                            onClick={this.props.onDelete!}
+                            text={this.props.icon.delete}
+                            theme={this.props.theme}
+                            icon={this.props.icon} />
+                    </div>
+                </label>
+                <Description theme={this.props.theme} message={this.props.schema.description} />
             </div>
         );
     }
@@ -55,8 +44,8 @@ export class NullEditor extends React.Component<common.Props<common.NullSchema, 
     get isReadOnly() {
         return this.props.readonly || this.props.schema.readonly;
     }
-    get hasOptionalCheckbox() {
-        return !this.props.required && (this.value === undefined || !this.isReadOnly);
+    get hasDeleteButtonFunction() {
+        return this.props.onDelete && !this.isReadOnly;
     }
     get titleToShow() {
         return common.getTitle(this.props.title, this.props.schema.title);

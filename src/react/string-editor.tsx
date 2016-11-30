@@ -1,6 +1,8 @@
 import * as React from "react";
 import * as common from "../common";
 import { Icon } from "./icon";
+import { Optional } from "./optional";
+import { Description } from "./description";
 
 export class StringEditor extends React.Component<common.Props<common.StringSchema, string>, {}> {
     value?: string;
@@ -20,7 +22,7 @@ export class StringEditor extends React.Component<common.Props<common.StringSche
             <textarea className={this.props.theme.formControl}
                 onChange={this.onChange}
                 defaultValue={this.value}
-                rows={5}
+                rows={10}
                 readOnly={this.isReadOnly} >
             </textarea>
         ) : null;
@@ -41,44 +43,6 @@ export class StringEditor extends React.Component<common.Props<common.StringSche
             </select>
         ) : null;
 
-        const lockButton = this.hasLockButton ? (
-            <button className={this.props.theme.button} onClick={this.toggleLocked}>
-                <Icon icon={this.props.icon} text={this.locked ? this.props.icon.unlock : this.props.icon.lock}></Icon>
-            </button>
-        ) : null;
-
-        const errorDescription = this.errorMessage ? <p className={this.props.theme.help}>{this.errorMessage}</p> : null;
-
-        const optionalCheckbox = this.hasOptionalCheckbox ? (
-            <div className={this.props.theme.optionalCheckbox}>
-                <label>
-                    <input type="checkbox"
-                        onChange={this.toggleOptional}
-                        checked={this.value === undefined}
-                        disabled={this.isReadOnly} />
-                    {this.props.locale.info.notExists}
-                </label>
-            </div>
-        ) : null;
-
-        const deleteButton = this.props.onDelete ? (
-            <button className={this.props.theme.button} onClick={this.props.onDelete}>
-                <Icon icon={this.props.icon} text={this.props.icon.delete}></Icon>
-            </button>
-        ) : null;
-
-        const titleView = this.props.title ? (
-            <label className={this.props.theme.label}>
-                {this.titleToShow}
-            </label>
-        ) : null;
-
-        const previewButton = this.canPreview ? (
-            <button className={this.props.theme.button} onClick={this.collapseOrExpand}>
-                <Icon icon={this.props.icon} text={this.collapsed ? this.props.icon.expand : this.props.icon.collapse}></Icon>
-            </button>
-        ) : null;
-
         const imagePreview = this.willPreviewImage ? <img style={common.imagePreviewStyle} src={this.getImageUrl} /> : null;
 
         const markdownPreview = this.willPreviewMarkdown ? <div dangerouslySetInnerHTML={{ __html: this.getMarkdown }}></div> : null;
@@ -87,26 +51,48 @@ export class StringEditor extends React.Component<common.Props<common.StringSche
 
         return (
             <div className={this.errorMessage ? this.props.theme.errorRow : this.props.theme.row}>
-                {titleView}
-                <div className={this.props.theme.buttonGroup} style={common.buttonGroupStyle}>
-                    {optionalCheckbox}
-                    {deleteButton}
-                    {previewButton}
-                    {lockButton}
-                </div>
+                <label className={this.props.theme.label}>
+                    {this.titleToShow}
+                    <div className={this.props.theme.buttonGroup} style={common.buttonGroupStyle}>
+                        <Optional required={this.props.required}
+                            value={this.value}
+                            isReadOnly={this.isReadOnly}
+                            theme={this.props.theme}
+                            locale={this.props.locale}
+                            toggleOptional={this.toggleOptional} />
+                        <Icon valid={this.hasDeleteButtonFunction}
+                            onClick={this.props.onDelete!}
+                            text={this.props.icon.delete}
+                            theme={this.props.theme}
+                            icon={this.props.icon} />
+                        <Icon valid={this.canPreview}
+                            onClick={this.collapseOrExpand}
+                            text={this.collapsed ? this.props.icon.expand : this.props.icon.collapse}
+                            theme={this.props.theme}
+                            icon={this.props.icon} />
+                        <Icon valid={this.hasLockButton}
+                            onClick={this.toggleLocked}
+                            text={this.locked ? this.props.icon.unlock : this.props.icon.lock}
+                            theme={this.props.theme}
+                            icon={this.props.icon} />
+                    </div>
+                </label>
                 {textarea}
                 {input}
                 {select}
                 {imagePreview}
                 {markdownPreview}
                 {codePreview}
-                <p className={this.props.theme.help}>{this.props.schema.description}</p>
-                {errorDescription}
+                <Description theme={this.props.theme} message={this.props.schema.description} />
+                <Description theme={this.props.theme} message={this.errorMessage} />
             </div>
         );
     }
     get isReadOnly() {
         return this.props.readonly || this.props.schema.readonly;
+    }
+    get hasDeleteButtonFunction() {
+        return this.props.onDelete && !this.isReadOnly;
     }
     get useTextArea() {
         const isUnlockedCodeOrMarkdown = (this.props.schema.format === "code" || this.props.schema.format === "markdown") && (!this.locked);
@@ -127,9 +113,6 @@ export class StringEditor extends React.Component<common.Props<common.StringSche
             && (this.props.schema.enum === undefined || this.isReadOnly)
             && (this.props.schema.format === "code" || this.props.schema.format === "markdown");
     }
-    get hasOptionalCheckbox() {
-        return !this.props.required && (this.value === undefined || !this.isReadOnly);
-    }
     get canPreviewImage() {
         return common.isImageUrl(this.value);
     }
@@ -140,13 +123,13 @@ export class StringEditor extends React.Component<common.Props<common.StringSche
         return this.props.hljs && this.props.schema.format === "code";
     }
     get canPreview() {
-        return this.value && (this.canPreviewImage || this.canPreviewMarkdown || this.canPreviewCode);
+        return (!!this.value) && (this.canPreviewImage || this.canPreviewMarkdown || this.canPreviewCode);
     }
     get getImageUrl() {
         return this.props.forceHttps ? common.replaceProtocal(this.value!) : this.value;
     }
     get getMarkdown() {
-        return this.props.md.render(this.value);
+        return this.props.md!.render(this.value!);
     }
     get getCode() {
         return this.props.hljs!.highlightAuto(this.value!).value;

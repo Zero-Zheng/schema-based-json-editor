@@ -2,6 +2,8 @@ import * as React from "react";
 import * as common from "../common";
 import { Editor } from "./editor";
 import { Icon } from "./icon";
+import { Optional } from "./optional";
+import { Description } from "./description";
 
 export class ObjectEditor extends React.Component<common.Props<common.ObjectSchema, { [name: string]: common.ValueType }>, { collapsed?: boolean; value?: { [name: string]: common.ValueType } }> {
     collapsed = false;
@@ -43,37 +45,30 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
             }
         }
 
-        const deleteButton = this.hasDeleteButtonFunction ? (
-            <button className={this.props.theme.button} onClick={this.props.onDelete}>
-                <Icon icon={this.props.icon} text={this.props.icon.delete}></Icon>
-            </button>
-        ) : null;
-
-        const optionalCheckbox = this.hasOptionalCheckbox ? (
-            <div className={this.props.theme.optionalCheckbox}>
-                <label>
-                    <input type="checkbox"
-                        onChange={this.toggleOptional}
-                        checked={this.value === undefined}
-                        disabled={this.isReadOnly} />
-                    {this.props.locale.info.notExists}
-                </label>
-            </div>
-        ) : null;
-
         return (
             <div className={this.props.theme.row}>
                 <h3>
                     {this.titleToShow}
                     <div className={this.props.theme.buttonGroup} style={common.buttonGroupStyle}>
-                        {optionalCheckbox}
-                        <button className={this.props.theme.button} onClick={this.collapseOrExpand}>
-                            <Icon icon={this.props.icon} text={this.collapsed ? this.props.icon.expand : this.props.icon.collapse}></Icon>
-                        </button>
-                        {deleteButton}
+                        <Optional required={this.props.required}
+                            value={this.value}
+                            isReadOnly={this.isReadOnly}
+                            theme={this.props.theme}
+                            locale={this.props.locale}
+                            toggleOptional={this.toggleOptional} />
+                        <Icon valid={true}
+                            onClick={this.collapseOrExpand}
+                            text={this.collapsed ? this.props.icon.expand : this.props.icon.collapse}
+                            theme={this.props.theme}
+                            icon={this.props.icon} />
+                        <Icon valid={this.hasDeleteButtonFunction}
+                            onClick={this.props.onDelete!}
+                            text={this.props.icon.delete}
+                            theme={this.props.theme}
+                            icon={this.props.icon} />
                     </div>
                 </h3>
-                <p className={this.props.theme.help}>{this.props.schema.description}</p>
+                <Description theme={this.props.theme} message={this.props.schema.description} />
                 <div className={this.props.theme.rowContainer}>
                     {childrenElement}
                 </div>
@@ -98,14 +93,11 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
     isRequired(property: string) {
         return this.props.schema.required && this.props.schema.required.some(r => r === property);
     }
-    get hasDeleteButtonFunction() {
-        return this.props.onDelete && !this.isReadOnly;
-    }
     get isReadOnly() {
         return this.props.readonly || this.props.schema.readonly;
     }
-    get hasOptionalCheckbox() {
-        return !this.props.required && (this.value === undefined || !this.isReadOnly);
+    get hasDeleteButtonFunction() {
+        return this.props.onDelete && !this.isReadOnly;
     }
     get titleToShow() {
         if (this.props.onDelete) {

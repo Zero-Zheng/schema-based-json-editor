@@ -14,9 +14,8 @@ import { schema } from "../schema";
 
 import * as common from "../../dist/common";
 
-declare const require: any;
 import * as dragula from "dragula";
-const markdownit = require("markdown-it");
+import * as MarkdownIt from "markdown-it";
 import * as hljs from "highlight.js";
 
 @Component({
@@ -24,9 +23,18 @@ import * as hljs from "highlight.js";
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
     <div>
-        <div style="width: 400px; margin: 10px; float: left; overflow-y: scroll; height: 600px">
-            Schema:
-            <pre><code [innerHTML]="schemaHtml"></code></pre>
+        <div style="width: 400px; margin: 10px; float: left; overflow-y: scroll; height: 600px" class="bootstrap3-row-container">
+            <json-editor [schema]="schemaSchema"
+                [initialValue]="formattedSchema"
+                (updateValue)="updateSchema($event)"
+                theme="bootstrap3"
+                icon="fontawesome4"
+                [locale]="locale"
+                [dragula]="dragula"
+                [markdownit]="markdownit"
+                [hljs]="hljs"
+                [forceHttps]="false">
+            </json-editor>
         </div>
         <div style="width: 500px; margin: 10px; float: left; overflow-y: scroll; height: 600px" class="bootstrap3-row-container">
             GUI:
@@ -51,13 +59,23 @@ import * as hljs from "highlight.js";
 })
 export class MainComponent {
     schema = schema;
-    schemaHtml = hljs.highlight("json", JSON.stringify(schema, null, "  ")).value;
     value: any = {};
     color = "black";
     locale = navigator.language;
     dragula = dragula;
-    markdownit = markdownit;
+    markdownit = MarkdownIt;
     hljs = hljs;
+    schemaSchema: common.StringSchema = {
+        title: "Schema:",
+        type: "string",
+        format: "code",
+    };
+    get formattedSchema() {
+        return JSON.stringify(this.schema, null, "  ");
+    }
+    updateSchema({value}: common.ValidityValue<common.ValueType>) {
+        this.schema = JSON.parse(value as string);
+    }
     get valueHtml() {
         return hljs.highlight("json", JSON.stringify(this.value, null, "  ")).value;
     }
@@ -70,11 +88,11 @@ export class MainComponent {
 import { NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
 import { FormsModule } from "@angular/forms";
-import { JSONEditorComponent, BooleanEditorComponent, ArrayEditorComponent, EditorComponent, NullEditorComponent, NumberEditorComponent, ObjectEditorComponent, StringEditorComponent, IconComponent } from "../../dist/angular";
+import { JSONEditorComponent, BooleanEditorComponent, ArrayEditorComponent, EditorComponent, NullEditorComponent, NumberEditorComponent, ObjectEditorComponent, StringEditorComponent, IconComponent, OptionalComponent, DescriptionComponent } from "../../dist/angular";
 
 @NgModule({
     imports: [BrowserModule, FormsModule],
-    declarations: [MainComponent, JSONEditorComponent, BooleanEditorComponent, ArrayEditorComponent, EditorComponent, NullEditorComponent, NumberEditorComponent, ObjectEditorComponent, StringEditorComponent, IconComponent],
+    declarations: [MainComponent, JSONEditorComponent, BooleanEditorComponent, ArrayEditorComponent, EditorComponent, NullEditorComponent, NumberEditorComponent, ObjectEditorComponent, StringEditorComponent, IconComponent, OptionalComponent, DescriptionComponent],
     bootstrap: [MainComponent],
 })
 class MainModule { }

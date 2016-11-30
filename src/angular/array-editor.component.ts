@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, ViewChild, ElementRef } from "@angular/core";
 import * as common from "../common";
-import { hljs, dragula } from "../../typings/lib";
+import { hljs, dragula, MarkdownIt } from "../../typings/lib";
 
 @Component({
     selector: "array-editor",
@@ -9,24 +9,33 @@ import { hljs, dragula } from "../../typings/lib";
         <h3>
             {{titleToShow}}
             <div [class]="theme.buttonGroup" [style]="buttonGroupStyleString">
-                <div *ngIf="hasOptionalCheckbox" [class]="theme.optionalCheckbox">
-                    <label>
-                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="isReadOnly" />
-                        {{locale.info.notExists}}
-                    </label>
-                </div>
-                <button [class]="theme.button" (click)="collapseOrExpand()">
-                    <icon [icon]="icon" [text]="collapsed ? icon.expand : icon.collapse"></icon>
-                </button>
-                <button *ngIf="hasAddButton" [class]="theme.button" (click)="addItem()">
-                    <icon [icon]="icon" [text]="icon.add"></icon>
-                </button>
-                <button *ngIf="hasDeleteButtonFunction" [class]="theme.button" (click)="onDelete.emit()">
-                    <icon [icon]="icon" [text]="icon.delete"></icon>
-                </button>
+                <optional [required]="required"
+                    [value]="value"
+                    [isReadOnly]="isReadOnly"
+                    [theme]="theme"
+                    [locale]="locale"
+                    (toggleOptional)="toggleOptional()">
+                </optional>
+                <icon (onClick)="collapseOrExpand()"
+                    [text]="collapsed ? icon.expand : icon.collapse"
+                    [theme]="theme"
+                    [icon]="icon">
+                </icon>
+                <icon *ngIf="hasAddButton"
+                    (onClick)="addItem()"
+                    [text]="icon.add"
+                    [theme]="theme"
+                    [icon]="icon">
+                </icon>
+                <icon *ngIf="hasDeleteButtonFunction"
+                    (onClick)="onDelete.emit()"
+                    [text]="icon.delete"
+                    [theme]="theme"
+                    [icon]="icon">
+                </icon>
             </div>
         </h3>
-        <p [class]="theme.help">{{schema.description}}</p>
+       <description [theme]="theme" [message]="schema.description" [notEmpty]="true"></description>
         <div #drakContainer [class]="theme.rowContainer">
             <div *ngFor="let item of getValue; let i = index; trackBy:trackByFunction" [attr.data-index]="i" [class]="theme.rowContainer">
                 <editor [schema]="schema.items"
@@ -47,7 +56,7 @@ import { hljs, dragula } from "../../typings/lib";
                 </editor>
             </div>
         </div>
-        <p *ngIf="errorMessage" [class]="theme.help">{{errorMessage}}</p>
+        <description [theme]="theme" [message]="errorMessage"></description>
     </div>
     `,
 })
@@ -77,7 +86,7 @@ export class ArrayEditorComponent {
     @Input()
     dragula?: typeof dragula;
     @Input()
-    md?: any;
+    md?: MarkdownIt.MarkdownIt;
     @Input()
     hljs?: typeof hljs;
     @Input()
@@ -105,9 +114,6 @@ export class ArrayEditorComponent {
     }
     get isReadOnly() {
         return this.readonly || this.schema.readonly;
-    }
-    get hasOptionalCheckbox() {
-        return !this.required && (this.value === undefined || !this.isReadOnly);
     }
     get hasDeleteButtonFunction() {
         return this.hasDeleteButton && !this.isReadOnly;

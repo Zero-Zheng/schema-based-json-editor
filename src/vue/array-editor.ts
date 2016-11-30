@@ -1,34 +1,42 @@
+import * as Vue from "vue";
+import Component from "vue-class-component";
 import * as common from "../common";
-import { dragula } from "../../typings/lib";
+import { dragula, hljs, MarkdownIt } from "../../typings/lib";
 
-/* tslint:disable:only-arrow-functions */
-/* tslint:disable:no-unused-new */
-/* tslint:disable:object-literal-shorthand */
-
-export const arrayEditor = {
+@Component({
     template: `
     <div :class="errorMessage ? theme.errorRow : theme.row">
         <h3>
             {{titleToShow}}
             <div :class="theme.buttonGroup" :style="buttonGroupStyleString">
-                <div v-if="hasOptionalCheckbox" :class="theme.optionalCheckbox">
-                    <label>
-                        <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" :disabled="isReadOnly" />
-                        {{locale.info.notExists}}
-                    </label>
-                </div>
-                <button :class="theme.button" @click="collapseOrExpand()">
-                    <icon :icon="icon" :text="collapsed ? icon.expand : icon.collapse"></icon>
-                </button>
-                <button v-if="hasAddButton" :class="theme.button" @click="addItem()">
-                    <icon :icon="icon" :text="icon.add"></icon>
-                </button>
-                <button v-if="hasDeleteButton && !isReadOnly" :class="theme.button" @click="$emit('delete')">
-                    <icon :icon="icon" :text="icon.delete"></icon>
-                </button>
+                <optional :required="required"
+                    :value="value"
+                    :isReadOnly="isReadOnly"
+                    :theme="theme"
+                    :locale="locale"
+                    @toggleOptional="toggleOptional()">
+                </optional>
+                <icon v-if="true"
+                    @click="collapseOrExpand()"
+                    :text="collapsed ? icon.expand : icon.collapse"
+                    :theme="theme"
+                    :icon="icon">
+                </icon>
+                <icon v-if="hasAddButton"
+                    @click="addItem()"
+                    :text="icon.add"
+                    :theme="theme"
+                    :icon="icon">
+                </icon>
+                <icon v-if="hasDeleteButtonFunction"
+                    @click="$emit('delete')"
+                    :text="icon.delete"
+                    :theme="theme"
+                    :icon="icon">
+                </icon>
             </div>
         </h3>
-        <p :class="theme.help">{{schema.description}}</p>
+        <description :theme="theme" :message="schema.description" :notEmpty="true"></description>
         <div :class="theme.rowContainer">
             <div v-for="(item, i) in getValue" :key="(1 + i) * renderSwitch" :data-index="i" :class="theme.rowContainer">
                 <editor :schema="schema.items"
@@ -49,49 +57,64 @@ export const arrayEditor = {
                 </editor>
             </div>
         </div>
-        <p v-if="errorMessage" :class="theme.help">{{errorMessage}}</p>
+        <description :theme="theme" :message="errorMessage"></description>
     </div>
     `,
     props: ["schema", "initialValue", "title", "theme", "icon", "locale", "readonly", "required", "hasDeleteButton", "dragula", "md", "hljs", "forceHttps"],
-    data: function (this: This) {
-        const value = common.getDefaultValue(this.required, this.schema, this.initialValue) as common.ValueType[];
-        this.$emit("update-value", { value, isValid: !this.errorMessage });
-        return {
-            renderSwitch: 1,
-            collapsed: false,
-            value,
-            drak: undefined,
-            errorMessage: undefined,
-            buttonGroupStyleString: common.buttonGroupStyleString,
-            invalidIndexes: [],
-        };
-    },
-    beforeDestroy(this: This) {
+})
+export class ArrayEditor extends Vue {
+    schema: common.ArraySchema;
+    initialValue?: common.ValueType[];
+    title: string;
+    theme: common.Theme;
+    icon: common.Icon;
+    locale: common.Locale;
+    readonly: boolean;
+    required: boolean;
+    hasDeleteButton: boolean;
+    dragula?: typeof dragula;
+    md?: MarkdownIt.MarkdownIt;
+    hljs?: typeof hljs;
+    forceHttps?: boolean;
+
+    renderSwitch = 1;
+    collapsed = false;
+    value?: common.ValueType[] = [];
+    drak?: dragula.Drake | null = null;
+    errorMessage?: string = "";
+    buttonGroupStyleString = common.buttonGroupStyleString;
+    invalidIndexes = [];
+
+    beforeMount() {
+        this.value = common.getDefaultValue(this.required, this.schema, this.initialValue) as common.ValueType[];
+        this.$emit("update-value", { value: this.value, isValid: !this.errorMessage });
+    }
+
+    get getValue() {
+        if (this.value !== undefined && !this.collapsed) {
+            return this.value;
+        }
+        return [];
+    }
+    get isReadOnly() {
+        return this.readonly || this.schema.readonly;
+    }
+    get hasDeleteButtonFunction() {
+        return this.hasDeleteButton && !this.isReadOnly;
+    }
+    get hasAddButton() {
+        return !this.isReadOnly && this.value !== undefined;
+    }
+    get titleToShow() {
+        return common.getTitle(this.title, this.schema.title);
+    }
+
+    beforeDestroy() {
         if (this.drak) {
             this.drak.destroy();
         }
-    },
-    computed: {
-        getValue(this: This) {
-            if (this.value !== undefined && !this.collapsed) {
-                return this.value;
-            }
-            return [];
-        },
-        isReadOnly(this: This) {
-            return this.readonly || this.schema.readonly;
-        },
-        hasOptionalCheckbox(this: This) {
-            return !this.required && (this.value === undefined || !this.isReadOnly);
-        },
-        hasAddButton(this: This) {
-            return !this.isReadOnly && this.value !== undefined;
-        },
-        titleToShow(this: This) {
-            return common.getTitle(this.title, this.schema.title);
-        },
-    },
-    mounted(this: This) {
+    }
+    mounted() {
         if (this.dragula) {
             const container = this.$el.childNodes[4] as HTMLElement;
             if (container) {
@@ -105,54 +128,34 @@ export const arrayEditor = {
                 });
             }
         }
-    },
-    methods: {
-        collapseOrExpand(this: This) {
-            this.collapsed = !this.collapsed;
-        },
-        toggleOptional(this: This) {
-            this.value = common.toggleOptional(this.value, this.schema, this.initialValue) as common.ValueType[] | undefined;
-            this.validate();
-            this.$emit("update-value", { value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
-        },
-        validate(this: This) {
-            this.errorMessage = common.getErrorMessageOfArray(this.value, this.schema, this.locale);
-        },
-        addItem(this: This) {
-            this.value!.push(common.getDefaultValue(true, this.schema.items, undefined) !);
-            this.$emit("update-value", { value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
-        },
-        onDeleteFunction(this: This, i: number) {
-            this.value!.splice(i, 1);
-            this.renderSwitch = -this.renderSwitch;
-            this.validate();
-            this.$emit("update-value", { value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
-        },
-        onChange(this: This, i: number, {value, isValid}: common.ValidityValue<common.ValueType>) {
-            this.value![i] = value;
-            this.validate();
-            common.recordInvalidIndexesOfArray(this.invalidIndexes, isValid, i);
-            this.$emit("update-value", { value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
-        },
-    },
-};
+    }
 
-export type This = {
-    dragula?: typeof dragula;
-    drak?: dragula.Drake;
-    $emit: (event: string, args: common.ValidityValue<common.ValueType[] | undefined>) => void;
-    required: boolean;
-    schema: common.ArraySchema;
-    initialValue: common.ValueType[];
-    value?: common.ValueType[];
-    collapsed: boolean;
-    errorMessage?: string;
-    locale: common.Locale;
-    renderSwitch: number;
-    validate: () => void;
-    $el: HTMLElement;
-    invalidIndexes: number[];
-    readonly: boolean;
-    isReadOnly: boolean;
-    title: string;
-};
+    collapseOrExpand() {
+        this.collapsed = !this.collapsed;
+    }
+    toggleOptional() {
+        this.value = common.toggleOptional(this.value, this.schema, this.initialValue) as common.ValueType[] | undefined;
+        this.validate();
+        this.$emit("update-value", { value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
+    }
+    validate() {
+        this.errorMessage = common.getErrorMessageOfArray(this.value, this.schema, this.locale);
+    }
+    addItem() {
+        this.value!.push(common.getDefaultValue(true, this.schema.items, undefined) !);
+        this.$emit("update-value", { value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
+    }
+    onDeleteFunction(i: number) {
+        this.value!.splice(i, 1);
+        this.renderSwitch = -this.renderSwitch;
+        this.validate();
+        this.$emit("update-value", { value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
+    }
+    onChange(i: number, {value, isValid}: common.ValidityValue<common.ValueType>) {
+        this.value![i] = value;
+        this.validate();
+        common.recordInvalidIndexesOfArray(this.invalidIndexes, isValid, i);
+        this.$emit("update-value", { value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
+    }
+
+}

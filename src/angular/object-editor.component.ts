@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from "@angular/core";
 import * as common from "../common";
-import { hljs, dragula } from "../../typings/lib";
+import { hljs, dragula, MarkdownIt } from "../../typings/lib";
 
 @Component({
     selector: "object-editor",
@@ -10,21 +10,27 @@ import { hljs, dragula } from "../../typings/lib";
         <h3>
             {{titleToShow}}
             <div [class]="theme.buttonGroup" [style]="buttonGroupStyle">
-                <div *ngIf="hasOptionalCheckbox" [class]="theme.optionalCheckbox">
-                    <label>
-                        <input type="checkbox" (change)="toggleOptional()" [checked]="value === undefined" [disabled]="isReadOnly" />
-                        {{locale.info.notExists}}
-                    </label>
-                </div>
-                <button [class]="theme.button" (click)="collapseOrExpand()">
-                    <icon [icon]="icon" [text]="collapsed ? icon.expand : icon.collapse"></icon>
-                </button>
-                <button *ngIf="hasDeleteButtonFunction" [class]="theme.button" (click)="onDelete.emit()">
-                    <icon [icon]="icon" [text]="icon.delete"></icon>
-                </button>
+                <optional [required]="required"
+                    [value]="value"
+                    [isReadOnly]="isReadOnly"
+                    [theme]="theme"
+                    [locale]="locale"
+                    (toggleOptional)="toggleOptional()">
+                </optional>
+                <icon (onClick)="collapseOrExpand()"
+                    [text]="collapsed ? icon.expand : icon.collapse"
+                    [theme]="theme"
+                    [icon]="icon">
+                </icon>
+                <icon *ngIf="hasDeleteButtonFunction"
+                    (onClick)="onDelete.emit()"
+                    [text]="icon.delete"
+                    [theme]="theme"
+                    [icon]="icon">
+                </icon>
             </div>
         </h3>
-        <p [class]="theme.help">{{schema.description}}</p>
+        <description [theme]="theme" [message]="schema.description"></description>
         <div *ngIf="!collapsed && value !== undefined" [class]="theme.rowContainer">
             <editor *ngFor="let property of properties; trackBy: trackByFunction"
                 [schema]="property.value"
@@ -71,7 +77,7 @@ export class ObjectEditorComponent {
     @Input()
     dragula?: typeof dragula;
     @Input()
-    md?: any;
+    md?: MarkdownIt.MarkdownIt;
     @Input()
     hljs?: typeof hljs;
     @Input()
@@ -121,9 +127,6 @@ export class ObjectEditorComponent {
     }
     get isReadOnly() {
         return this.readonly || this.schema.readonly;
-    }
-    get hasOptionalCheckbox() {
-        return !this.required && (this.value === undefined || !this.isReadOnly);
     }
     get titleToShow() {
         if (this.hasDeleteButton) {

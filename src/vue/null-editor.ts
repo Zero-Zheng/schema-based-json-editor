@@ -1,64 +1,64 @@
+import * as Vue from "vue";
+import Component from "vue-class-component";
 import * as common from "../common";
 
-/* tslint:disable:only-arrow-functions */
-/* tslint:disable:no-unused-new */
-/* tslint:disable:object-literal-shorthand */
-
-export const nullEditor = {
+@Component({
     template: `
     <div :class="theme.row">
-        <label v-if="titleToShow" :class="theme.label">
+        <label :class="theme.label">
             {{titleToShow}}
             <div :class="theme.buttonGroup" :style="buttonGroupStyle">
-                <div v-if="hasOptionalCheckbox" :class="theme.optionalCheckbox">
-                    <label>
-                        <input type="checkbox" @change="toggleOptional()" :checked="value === undefined" :disabled="isReadOnly" />
-                        {{locale.info.notExists}}
-                    </label>
-                </div>
-                <button v-if="hasDeleteButton" :class="theme.button" @click="$emit('delete')">
-                    <icon :icon="icon" :text="icon.delete"></icon>
-                </button>
+                <optional :required="required"
+                    :value="value"
+                    :isReadOnly="isReadOnly"
+                    :theme="theme"
+                    :locale="locale"
+                    @toggleOptional="toggleOptional()">
+                </optional>
+                <icon v-if="hasDeleteButtonFunction"
+                    @click="$emit('delete')"
+                    :text="icon.delete"
+                    :theme="theme"
+                    :icon="icon">
+                </icon>
             </div>
         </label>
-        <p :class="theme.help">{{schema.description}}</p>
+        <description :theme="theme" :message="schema.description"></description>
     </div>
     `,
     props: ["schema", "initialValue", "title", "theme", "icon", "locale", "readonly", "required", "hasDeleteButton"],
-    data: function (this: This) {
-        const value = common.getDefaultValue(this.required, this.schema, this.initialValue) as null;
-        this.$emit("update-value", { value, isValid: true });
-        return {
-            value,
-            buttonGroupStyle: common.buttonGroupStyleString,
-        };
-    },
-    computed: {
-        isReadOnly(this: This) {
-            return this.readonly || this.schema.readonly;
-        },
-        hasOptionalCheckbox(this: This) {
-            return !this.required && (this.value === undefined || !this.isReadOnly);
-        },
-        titleToShow(this: This) {
-            return common.getTitle(this.title, this.schema.title);
-        },
-    },
-    methods: {
-        toggleOptional(this: This) {
-            this.value = common.toggleOptional(this.value, this.schema, this.initialValue) as null | undefined;
-            this.$emit("update-value", { value: this.value, isValid: true });
-        },
-    },
-};
-
-export type This = {
-    $emit: (event: string, args: common.ValidityValue<null | undefined>) => void;
-    value?: null;
-    schema: common.NullSchema;
-    initialValue: null;
-    required: boolean;
-    readonly: boolean;
-    isReadOnly: boolean;
+})
+export class NullEditor extends Vue {
+    schema: common.ArraySchema;
+    initialValue?: null;
     title: string;
-};
+    theme: common.Theme;
+    icon: common.Icon;
+    locale: common.Locale;
+    readonly: boolean;
+    required: boolean;
+    hasDeleteButton: boolean;
+
+    value?: null = null;
+    buttonGroupStyle = common.buttonGroupStyleString;
+
+    beforeMount() {
+        this.value = common.getDefaultValue(this.required, this.schema, this.initialValue) as null;
+        this.$emit("update-value", { value: this.value, isValid: true });
+    }
+
+    get isReadOnly() {
+        return this.readonly || this.schema.readonly;
+    }
+    get hasDeleteButtonFunction() {
+        return this.hasDeleteButton && !this.isReadOnly;
+    }
+    get titleToShow() {
+        return common.getTitle(this.title, this.schema.title);
+    }
+
+    toggleOptional() {
+        this.value = common.toggleOptional(this.value, this.schema, this.initialValue) as null | undefined;
+        this.$emit("update-value", { value: this.value, isValid: true });
+    }
+}
