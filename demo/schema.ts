@@ -33,7 +33,8 @@ export const schema: common.Schema = {
             type: "integer",
             title: "A integer example",
             description: "a integer description example",
-            default: 123,
+            default: 124,
+            multipleOf: 2,
         },
         nullExample: {
             type: "null",
@@ -148,6 +149,19 @@ export const schema: common.Schema = {
                 },
             ],
         },
+        optionalObjectExample: {
+            type: "object",
+            properties: {
+                propertyExample1: {
+                    type: "string",
+                },
+                propertyExample2: {
+                    type: "number",
+                },
+            },
+            maxProperties: 1,
+            minProperties: 0,
+        },
     },
     required: [
         "stringExample",
@@ -167,6 +181,7 @@ export const schema: common.Schema = {
         "codeExample",
         "performanceExample",
         "itemTitleExample",
+        "optionalObjectExample",
     ],
 };
 

@@ -4,6 +4,7 @@ import * as toNumber from "lodash/toNumber";
 import * as toInteger from "lodash/toInteger";
 import * as debounce from "lodash/debounce";
 import * as isObject from "lodash/isObject";
+import * as isInteger from "lodash/isInteger";
 
 export { toNumber, toInteger, debounce };
 
@@ -19,6 +20,8 @@ export type ObjectSchema = CommonSchema & {
     type: "object";
     properties: { [name: string]: Schema };
     required?: string[];
+    maxProperties?: number;
+    minProperties?: number;
 };
 
 export type ArraySchema = CommonSchema & {
@@ -35,6 +38,7 @@ export type NumberSchema = CommonSchema & {
     maximum?: number;
     exclusiveMaximum?: boolean;
     enum?: number[];
+    multipleOf?: number;
 };
 
 export type StringSchema = CommonSchema & {
@@ -126,6 +130,9 @@ export type Locale = {
         smallerThan: string;
         minItems: string;
         uniqueItems: string;
+        multipleOf: string;
+        minProperties: string;
+        maxProperties: string;
     },
     info: {
         notExists: string;
@@ -151,8 +158,11 @@ export const defaultLocale: Locale = {
         maximum: "Value must be <= {0}.",
         largerThan: "Value must be > {0}.",
         smallerThan: "Value must be < {0}.",
-        minItems: "The length of the array must be >= {0}",
+        minItems: "The length of the array must be >= {0}.",
         uniqueItems: "The item in {0} and {1} must not be same.",
+        multipleOf: "Value must be multiple value of {0}.",
+        minProperties: "Properties count must be >= {0}.",
+        maxProperties: "Properties count must be <= {0}.",
     },
     info: {
         notExists: "not exists",
@@ -181,6 +191,9 @@ export const locales: { [name: string]: Locale } = {
             smallerThan: "要求 < {0}。",
             minItems: "数组的长度要求 >= {0}。",
             uniqueItems: "{0} 和 {1} 的项不应该相同。",
+            multipleOf: "要求是 {0} 的整数倍。",
+            minProperties: "要求属性个数 >= {0}。",
+            maxProperties: "要求属性个数 <= {0}。",
         },
         info: {
             notExists: "不存在",
@@ -483,6 +496,11 @@ export function getErrorMessageOfNumber(value: number | undefined, schema: Numbe
                 }
             }
         }
+        if (schema.multipleOf && schema.multipleOf > 0) {
+            if (!isInteger(value / schema.multipleOf)) {
+                return locale.error.multipleOf.replace("{0}", String(schema.multipleOf));
+            }
+        }
     }
     return "";
 }
@@ -500,6 +518,26 @@ export function getErrorMessageOfString(value: string | undefined, schema: Strin
         if (schema.pattern !== undefined
             && !new RegExp(schema.pattern).test(value)) {
             return locale.error.pattern.replace("{0}", String(schema.pattern));
+        }
+    }
+    return "";
+}
+
+export function getErrorMessageOfObject(value: { [name: string]: ValueType } | undefined, schema: ObjectSchema, locale: Locale) {
+    if (value !== undefined) {
+        let length = 0;
+        for (const key in value) {
+            if (value[key] !== undefined) {
+                length++;
+            }
+        }
+        if (schema.minProperties !== undefined
+            && length < schema.minProperties) {
+            return locale.error.minProperties.replace("{0}", String(schema.minProperties));
+        }
+        if (schema.maxProperties !== undefined
+            && length > schema.maxProperties) {
+            return locale.error.maxProperties.replace("{0}", String(schema.maxProperties));
         }
     }
     return "";
