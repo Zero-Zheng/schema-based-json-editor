@@ -9,9 +9,15 @@ import { hljs, dragula, MarkdownIt } from "../../typings/lib";
         <h3>
             {{titleToShow}}
             <div [class]="theme.buttonGroup" [style]="buttonGroupStyleString">
+                <icon *ngIf="!isReadOnly"
+                    (onClick)="toggleLocked()"
+                    [text]="locked ? icon.unlock : icon.lock"
+                    [theme]="theme"
+                    [icon]="icon">
+                </icon>
                 <optional [required]="required"
                     [value]="value"
-                    [isReadOnly]="isReadOnly"
+                    [isReadOnly]="isReadOnly || isLocked"
                     [theme]="theme"
                     [locale]="locale"
                     (toggleOptional)="toggleOptional()">
@@ -37,22 +43,29 @@ import { hljs, dragula, MarkdownIt } from "../../typings/lib";
         </h3>
        <description [theme]="theme" [message]="schema.description" [notEmpty]="true"></description>
         <div #drakContainer [class]="theme.rowContainer">
-            <div *ngFor="let item of getValue; let i = index; trackBy:trackByFunction" [attr.data-index]="i" [class]="theme.rowContainer">
+            <div *ngIf="showFilter" [class]="theme.row">
+                <input [class]="theme.formControl"
+                    (change)="onFilterChange($event)"
+                    (keyup)="onFilterChange($event)"
+                    [value]="filter" />
+            </div>
+            <div *ngFor="let item of filteredValues; trackBy:trackByFunction" [attr.data-index]="item.i" [class]="theme.rowContainer">
                 <editor [schema]="schema.items"
-                    [title]="i"
-                    [initialValue]="value[i]"
-                    (updateValue)="onChange(i, $event)"
+                    [title]="item.i"
+                    [initialValue]="value[item.i]"
+                    (updateValue)="onChange(item.i, $event)"
                     [theme]="theme"
                     [icon]="icon"
                     [locale]="locale"
                     [required]="true"
                     [readonly]="isReadOnly"
-                    (onDelete)="onDeleteFunction(i)"
+                    (onDelete)="onDeleteFunction(item.i)"
                     [hasDeleteButton]="true"
                     [dragula]="dragula"
                     [md]="md"
                     [hljs]="hljs"
-                    [forceHttps]="forceHttps">
+                    [forceHttps]="forceHttps"
+                    [parentIsLocked]="isLocked">
                 </editor>
             </div>
         </div>
@@ -91,35 +104,50 @@ export class ArrayEditorComponent {
     hljs?: typeof hljs;
     @Input()
     forceHttps?: boolean;
+    @Input()
+    parentIsLocked?: boolean;
 
     @ViewChild("drakContainer")
     drakContainer: ElementRef;
 
     renderSwitch = 1;
-    collapsed = false;
+    collapsed?: boolean = false;
     value?: common.ValueType[];
     drak?: dragula.Drake;
     errorMessage: string;
     buttonGroupStyleString = common.buttonGroupStyleString;
     invalidIndexes: number[] = [];
+    filter = "";
+    locked = true;
     get getValue() {
         if (this.value !== undefined && !this.collapsed) {
             return this.value;
         }
         return [];
     }
+    get filteredValues() {
+        return this.getValue.map((p, i) => { return { p, i }; })
+            .filter(({p, i}) => common.filterArray(p, i, this.schema.items, this.filter));
+    }
+    get showFilter() {
+        return this.getValue.length >= common.minItemCountIfNeedFilter;
+    }
     ngOnInit() {
+        this.collapsed = this.schema.collapsed;
         this.value = common.getDefaultValue(this.required, this.schema, this.initialValue) as common.ValueType[];
         this.updateValue.emit({ value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
     }
     get isReadOnly() {
         return this.readonly || this.schema.readonly;
     }
+    get isLocked() {
+        return this.parentIsLocked !== false && this.locked;
+    }
     get hasDeleteButtonFunction() {
-        return this.hasDeleteButton && !this.isReadOnly;
+        return this.hasDeleteButton && !this.isReadOnly && !this.isLocked;
     }
     get hasAddButton() {
-        return !this.isReadOnly && this.value !== undefined;
+        return !this.isReadOnly && this.value !== undefined && !this.isLocked;
     }
     get titleToShow() {
         return common.getTitle(this.title, this.schema.title);
@@ -142,8 +170,8 @@ export class ArrayEditorComponent {
             this.drak.destroy();
         }
     }
-    trackByFunction = (index: number, value: common.ValueType) => {
-        return (1 + index) * this.renderSwitch;
+    trackByFunction = (index: number, item: { p: common.ValueType, i: number }) => {
+        return (1 + item.i) * this.renderSwitch;
     }
     collapseOrExpand = () => {
         this.collapsed = !this.collapsed;
@@ -171,5 +199,11 @@ export class ArrayEditorComponent {
         this.validate();
         common.recordInvalidIndexesOfArray(this.invalidIndexes, isValid, i);
         this.updateValue.emit({ value: this.value, isValid: !this.errorMessage && this.invalidIndexes.length === 0 });
+    }
+    onFilterChange(e: { target: { value: string } }) {
+        this.filter = e.target.value;
+    }
+    toggleLocked = () => {
+        this.locked = !this.locked;
     }
 }

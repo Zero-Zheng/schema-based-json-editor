@@ -7,25 +7,39 @@ import { Description } from "./description";
 import { Cancelable } from "lodash";
 export type Cancelable = Cancelable;
 
-export class NumberEditor extends React.Component<common.Props<common.NumberSchema, number>, {}> {
+export type Props = common.Props<common.NumberSchema, number>;
+export type State = Partial<{
     value?: number;
     errorMessage: string;
-    onChangeFunction = common.debounce((value: string) => {
-        this.value = this.props.schema.type === "integer" ? common.toInteger(value) : common.toNumber(value);
-        this.validate();
-        this.setState({ value: this.value });
-        this.props.updateValue(this.value, !this.errorMessage);
-    }, 500);
-    constructor(props: common.Props<common.ArraySchema, number>) {
+    locked: boolean;
+    willRender: boolean;
+}>;
+
+export class NumberEditor extends React.Component<Props, State> {
+    value?: number;
+    errorMessage: string;
+    locked = true;
+    willRender = false;
+    constructor(props: Props) {
         super(props);
         this.value = common.getDefaultValue(this.props.required, this.props.schema, this.props.initialValue) as number;
         this.validate();
     }
     onChange = (e: React.FormEvent<{ value: string }>) => {
-        this.onChangeFunction(e.currentTarget.value);
+        this.value = this.props.schema.type === "integer" ? common.toInteger(e.currentTarget.value) : common.toNumber(e.currentTarget.value);
+        this.validate();
+        this.setState({ value: this.value });
+        this.props.updateValue(this.value, !this.errorMessage);
     }
     componentDidMount() {
         this.props.updateValue(this.value, !this.errorMessage);
+    }
+    shouldComponentUpdate(nextProps: Props, nextState: State) {
+        if (this.willRender) {
+            this.willRender = false;
+            return true;
+        }
+        return this.props.initialValue !== nextProps.initialValue || this.props.parentIsLocked !== nextProps.parentIsLocked;
     }
     render() {
         const input = this.useInput ? (
@@ -33,7 +47,8 @@ export class NumberEditor extends React.Component<common.Props<common.NumberSche
                 type="number"
                 onChange={this.onChange}
                 defaultValue={String(this.value)}
-                readOnly={this.isReadOnly} />
+                readOnly={this.isReadOnly || this.isLocked}
+                disabled={this.isReadOnly || this.isLocked} />
         ) : null;
 
         const select = this.useSelect ? (
@@ -50,9 +65,14 @@ export class NumberEditor extends React.Component<common.Props<common.NumberSche
                 <label className={this.props.theme.label}>
                     {this.titleToShow}
                     <div className={this.props.theme.buttonGroup} style={common.buttonGroupStyle}>
+                        <Icon valid={!this.isReadOnly}
+                            onClick={this.toggleLocked}
+                            text={this.locked ? this.props.icon.unlock : this.props.icon.lock}
+                            theme={this.props.theme}
+                            icon={this.props.icon} />
                         <Optional required={this.props.required}
                             value={this.value}
-                            isReadOnly={this.isReadOnly}
+                            isReadOnly={this.isReadOnly || this.isLocked}
                             theme={this.props.theme}
                             locale={this.props.locale}
                             toggleOptional={this.toggleOptional} />
@@ -79,17 +99,25 @@ export class NumberEditor extends React.Component<common.Props<common.NumberSche
         this.setState({ value: this.value });
         this.props.updateValue(this.value, !this.errorMessage);
     }
+    toggleLocked = () => {
+        this.locked = !this.locked;
+        this.willRender = true;
+        this.setState({ locked: this.locked });
+    }
     get useInput() {
-        return this.value !== undefined && (this.props.schema.enum === undefined || this.isReadOnly);
+        return this.value !== undefined && (this.props.schema.enum === undefined || this.isReadOnly || this.isLocked);
     }
     get useSelect() {
-        return this.value !== undefined && (this.props.schema.enum !== undefined && !this.isReadOnly);
+        return this.value !== undefined && (this.props.schema.enum !== undefined && !this.isReadOnly && !this.isLocked);
     }
     get isReadOnly() {
         return this.props.readonly || this.props.schema.readonly;
     }
+    get isLocked() {
+        return this.props.parentIsLocked !== false && this.locked;
+    }
     get hasDeleteButtonFunction() {
-        return this.props.onDelete && !this.isReadOnly;
+        return this.props.onDelete && !this.isReadOnly && !this.isLocked;
     }
     get titleToShow() {
         return common.getTitle(this.props.title, this.props.schema.title);

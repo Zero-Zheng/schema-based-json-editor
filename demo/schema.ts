@@ -117,7 +117,7 @@ export const schema: common.Schema = {
         markdownExample: {
             type: "string",
             format: "markdown",
-            default: "### title\n\n```js\nfunction foo(bar) {\n    console.log(bar);\n}\n```",
+            default: "###### markdown title and code example\n\n```js\nfunction foo(bar) {\n    console.log(bar);\n}\n```",
         },
         codeExample: {
             type: "string",
@@ -137,6 +137,7 @@ export const schema: common.Schema = {
                     },
                 },
                 required: ["propertyExample1", "propertyExample2"],
+                collapsed: true,
             },
             default: [
                 {
@@ -146,6 +147,22 @@ export const schema: common.Schema = {
                 {
                     propertyExample1: "bar",
                     propertyExample2: 2,
+                },
+                {
+                    propertyExample1: "baz",
+                    propertyExample2: 3,
+                },
+                {
+                    propertyExample1: "abc",
+                    propertyExample2: 4,
+                },
+                {
+                    propertyExample1: "def",
+                    propertyExample2: 5,
+                },
+                {
+                    propertyExample1: "ghi",
+                    propertyExample2: 6,
                 },
             ],
         },
@@ -179,6 +196,15 @@ export const schema: common.Schema = {
                 },
             },
         },
+        collapsedObjectExample: {
+            type: "object",
+            properties: {
+                propertyExample1: {
+                    type: "string",
+                },
+            },
+            collapsed: true,
+        },
     },
     required: [
         "stringExample",
@@ -200,6 +226,7 @@ export const schema: common.Schema = {
         "itemTitleExample",
         "optionalObjectExample",
         "propertyOrderExample",
+        "collapsedObjectExample",
     ],
 };
 

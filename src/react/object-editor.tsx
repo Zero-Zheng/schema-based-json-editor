@@ -5,24 +5,37 @@ import { Icon } from "./icon";
 import { Optional } from "./optional";
 import { Description } from "./description";
 
-export class ObjectEditor extends React.Component<common.Props<common.ObjectSchema, { [name: string]: common.ValueType }>, { collapsed?: boolean; value?: { [name: string]: common.ValueType } }> {
-    collapsed = false;
+export type Props = common.Props<common.ObjectSchema, { [name: string]: common.ValueType }>;
+export type State = Partial<{
+    collapsed?: boolean;
+    value?: { [name: string]: common.ValueType };
+    invalidProperties: string[];
+    errorMessage: string;
+    properties: { property: string; schema: common.Schema }[];
+    filter: string;
+    locked: boolean;
+}>;
+
+export class ObjectEditor extends React.Component<Props, State> {
+    collapsed = this.props.schema.collapsed;
     value?: { [name: string]: common.ValueType };
     invalidProperties: string[] = [];
     errorMessage: string;
-    properties: { name: string; value: common.Schema }[] = [];
-    constructor(props: common.Props<common.ObjectSchema, { [name: string]: common.ValueType }>) {
+    properties: { property: string; schema: common.Schema }[] = [];
+    filter: string = "";
+    locked = true;
+    constructor(props: Props) {
         super(props);
         this.value = common.getDefaultValue(this.props.required, this.props.schema, this.props.initialValue) as { [name: string]: common.ValueType };
         this.validate();
-        if (!this.collapsed && this.value !== undefined) {
+        if (this.value !== undefined) {
             for (const property in this.props.schema.properties) {
                 const schema = this.props.schema.properties[property];
                 const required = this.props.schema.required && this.props.schema.required.some(r => r === property);
                 this.value[property] = common.getDefaultValue(required, schema, this.value[property]) as { [name: string]: common.ValueType };
                 this.properties.push({
-                    name: property,
-                    value: schema,
+                    property,
+                    schema,
                 });
             }
             this.properties = this.properties.sort(common.compare);
@@ -32,26 +45,12 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
         this.props.updateValue(this.value, this.invalidProperties.length === 0);
     }
     render() {
-        const childrenElement: JSX.Element[] = [];
-        if (!this.collapsed && this.value !== undefined) {
-            Object.keys(this.props.schema.properties).sort((a, b) => {
-                if (this.props.schema.properties[a].propertyOrder === undefined
-                    && this.props.schema.properties[b].propertyOrder === undefined) {
-                    return 0;
-                }
-                if (this.props.schema.properties[a].propertyOrder === undefined) {
-                    return -this.props.schema.properties[b].propertyOrder!;
-                }
-                if (this.props.schema.properties[b].propertyOrder === undefined) {
-                    return this.props.schema.properties[a].propertyOrder!;
-                }
-                return this.props.schema.properties[a].propertyOrder! - this.props.schema.properties[b].propertyOrder;
-            });
-            for (const {name: property, value: schema} of this.properties) {
-                childrenElement.push(<Editor key={property}
+        const childrenElement: JSX.Element[] = (!this.collapsed && this.value !== undefined)
+            ? this.properties.filter(p => common.filterObject(p, this.filter))
+                .map(({ property, schema }) => <Editor key={property}
                     schema={schema}
                     title={schema.title || property}
-                    initialValue={this.value[property]}
+                    initialValue={this.value![property]}
                     updateValue={(value: common.ValueType, isValid: boolean) => this.onChange(property, value, isValid)}
                     theme={this.props.theme}
                     icon={this.props.icon}
@@ -61,18 +60,28 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
                     dragula={this.props.dragula}
                     md={this.props.md}
                     hljs={this.props.hljs}
-                    forceHttps={this.props.forceHttps} />);
-            }
-        }
+                    forceHttps={this.props.forceHttps}
+                    parentIsLocked={this.isLocked} />)
+            : [];
+        const filterElement: JSX.Element | null = (!this.collapsed && this.value !== undefined && this.showFilter)
+            ? <div className={this.props.theme.row}><input className={this.props.theme.formControl}
+                onChange={this.onFilterChange}
+                defaultValue={this.filter} /></div>
+            : null;
 
         return (
             <div className={this.errorMessage ? this.props.theme.errorRow : this.props.theme.row}>
                 <h3>
                     {this.titleToShow}
                     <div className={this.props.theme.buttonGroup} style={common.buttonGroupStyle}>
+                        <Icon valid={!this.isReadOnly}
+                            onClick={this.toggleLocked}
+                            text={this.locked ? this.props.icon.unlock : this.props.icon.lock}
+                            theme={this.props.theme}
+                            icon={this.props.icon} />
                         <Optional required={this.props.required}
                             value={this.value}
-                            isReadOnly={this.isReadOnly}
+                            isReadOnly={this.isReadOnly || this.isLocked}
                             theme={this.props.theme}
                             locale={this.props.locale}
                             toggleOptional={this.toggleOptional} />
@@ -90,6 +99,7 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
                 </h3>
                 <Description theme={this.props.theme} message={this.props.schema.description} />
                 <div className={this.props.theme.rowContainer}>
+                    {filterElement}
                     {childrenElement}
                 </div>
                 <Description theme={this.props.theme} message={this.errorMessage} />
@@ -105,6 +115,14 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
         this.validate();
         this.setState({ value: this.value });
         this.props.updateValue(this.value, this.invalidProperties.length === 0);
+    }
+    toggleLocked = () => {
+        this.locked = !this.locked;
+        this.setState({ locked: this.locked });
+    }
+    onFilterChange = (e: React.FormEvent<{ value: string }>) => {
+        this.filter = e.currentTarget.value;
+        this.setState({ filter: this.filter });
     }
     onChange = (property: string, value: common.ValueType, isValid: boolean) => {
         this.value![property] = value;
@@ -122,13 +140,19 @@ export class ObjectEditor extends React.Component<common.Props<common.ObjectSche
     get isReadOnly() {
         return this.props.readonly || this.props.schema.readonly;
     }
+    get isLocked() {
+        return this.props.parentIsLocked !== false && this.locked;
+    }
     get hasDeleteButtonFunction() {
-        return this.props.onDelete && !this.isReadOnly;
+        return this.props.onDelete && !this.isReadOnly && !this.locked;
     }
     get titleToShow() {
         if (this.props.onDelete) {
             return common.getTitle(common.findTitle(this.value, this.properties), this.props.title, this.props.schema.title);
         }
         return common.getTitle(this.props.title, this.props.schema.title);
+    }
+    get showFilter() {
+        return this.properties.length >= common.minItemCountIfNeedFilter;
     }
 }

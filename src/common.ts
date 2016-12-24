@@ -2,11 +2,10 @@ import "tslib";
 
 import * as toNumber from "lodash/toNumber";
 import * as toInteger from "lodash/toInteger";
-import * as debounce from "lodash/debounce";
 import * as isObject from "lodash/isObject";
 import * as isInteger from "lodash/isInteger";
 
-export { toNumber, toInteger, debounce };
+export { toNumber, toInteger };
 
 export type CommonSchema = {
     $schema?: string;
@@ -23,6 +22,7 @@ export type ObjectSchema = CommonSchema & {
     required?: string[];
     maxProperties?: number;
     minProperties?: number;
+    collapsed?: boolean;
 };
 
 export type ArraySchema = CommonSchema & {
@@ -30,6 +30,7 @@ export type ArraySchema = CommonSchema & {
     items: Schema;
     minItems?: number;
     uniqueItems?: boolean;
+    collapsed?: boolean;
 };
 
 export type NumberSchema = CommonSchema & {
@@ -396,6 +397,7 @@ export interface Props<TSchema extends CommonSchema, TValue> {
     md?: MarkdownIt.MarkdownIt;
     hljs?: typeof hljsLib;
     forceHttps?: boolean;
+    parentIsLocked?: boolean;
 }
 
 export function isSame(value1: ValueType, value2: ValueType) {
@@ -664,9 +666,26 @@ export function initializeMarkdown(markdownit: typeof MarkdownIt, hljs: typeof h
     return md;
 }
 
-export function findTitle(value: { [name: string]: ValueType } | undefined, properties: { name: string; value: Schema }[]) {
+export function findTitle(value: { [name: string]: ValueType } | undefined, properties: { property: string; schema: Schema }[]) {
     if (value) {
-        for (const {name: property} of properties) {
+        for (const {property} of properties) {
+            const title = value[property];
+            if (typeof title === "string" && title.length > 0) {
+                if (title.length > 23) {
+                    return title.substring(0, 20) + "...";
+                }
+                return title;
+            } else {
+                continue;
+            }
+        }
+    }
+    return undefined;
+}
+
+function findTitleFromSchema(value: { [name: string]: ValueType } | undefined, schema: ObjectSchema) {
+    if (value) {
+        for (const property in schema.properties) {
             const title = value[property];
             if (typeof title === "string" && title.length > 0) {
                 if (title.length > 23) {
@@ -691,15 +710,39 @@ export function getTitle(...titles: any[]) {
     return "";
 }
 
-export function compare(a: { name: string; value: Schema }, b: { name: string; value: Schema }) {
-    if (typeof a.value.propertyOrder === "number") {
-        if (typeof b.value.propertyOrder === "number") {
-            return a.value.propertyOrder - b.value.propertyOrder;
+export function compare(a: { property: string; schema: Schema }, b: { property: string; schema: Schema }) {
+    if (typeof a.schema.propertyOrder === "number") {
+        if (typeof b.schema.propertyOrder === "number") {
+            return a.schema.propertyOrder - b.schema.propertyOrder;
         }
         return -1;
     }
-    if (typeof b.value.propertyOrder === "number") {
+    if (typeof b.schema.propertyOrder === "number") {
         return 1;
     }
     return 0;
 }
+
+export function filterObject({property, schema}: { property: string; schema: Schema }, filterValue: string): boolean {
+    return filterValue === ""
+        || property.indexOf(filterValue) !== -1
+        || (!!schema.title && schema.title.indexOf(filterValue) !== -1)
+        || (!!schema.description && schema.description.indexOf(filterValue) !== -1);
+}
+
+export function filterArray(value: ValueType, index: number, schema: Schema, filterValue: string): boolean {
+    const result = filterValue === ""
+        || String(index).indexOf(filterValue) !== -1
+        || (schema.type === "string" && (value as string).indexOf(filterValue) !== -1)
+        || ((schema.type === "number" || schema.type === "integer") && String(value as number).indexOf(filterValue) !== -1);
+    if (result) {
+        return true;
+    }
+    if (schema.type === "object") {
+        const title = getTitle(findTitleFromSchema(value as { [name: string]: ValueType }, schema as ObjectSchema), schema.title);
+        return title.indexOf(filterValue) !== -1;
+    }
+    return false;
+}
+
+export const minItemCountIfNeedFilter = 6;
