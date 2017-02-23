@@ -1,7 +1,6 @@
 import "core-js/es6";
 import "core-js/es7/reflect";
 import "zone.js/dist/zone";
-import "tslib";
 import "dragula";
 import "markdown-it";
 import "highlight.js";

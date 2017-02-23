@@ -1,11 +1,12 @@
-import "tslib";
+import { __extends, __decorate, __assign } from "tslib";
+(window as any).__extends = __extends;
+(window as any).__decorate = __decorate;
+(window as any).__assign = __assign;
 
-import * as toNumber from "lodash/toNumber";
-import * as toInteger from "lodash/toInteger";
-import * as isObject from "lodash/isObject";
-import * as isInteger from "lodash/isInteger";
-
-export { toNumber, toInteger };
+export const toNumber = require("lodash.tonumber");
+export const toInteger = require("lodash.tointeger");
+const isObject = require("lodash.isobject");
+const isInteger = require("lodash.isinteger");
 
 export type CommonSchema = {
     $schema?: string;
