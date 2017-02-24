@@ -45,3 +45,6 @@ demo/css/
 spec/**/*.js
 dist/
 demo/**/index.html
+demo/**/*.js
+demo/*.editor.js
+demo/*.vendor.js
